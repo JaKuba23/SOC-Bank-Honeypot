@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC Dashboard - Honeypot</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 20px;}
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left;}
+        th { background: #f4f7f6;}
+        .phishing { background: #ffe6e6;}
+        .suspicious { background: #fffbe6;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SOC Dashboard</h1>
+        <div>
+            <input type="text" id="filterIp" placeholder="Filter by IP">
+            <input type="text" id="filterKeyword" placeholder="Keyword">
+            <select id="filterLevel">
+                <option value="">All Levels</option>
+                <option value="WARNING">WARNING</option>
+                <option value="INFO">INFO</option>
+            </select>
+            <button onclick="loadLogs()">Filter</button>
+        </div>
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>Date/Time</th>
+                    <th>Level</th>
+                    <th>IP</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <script>
+        async function loadLogs() {
+            const ip = document.getElementById('filterIp').value;
+            const keyword = document.getElementById('filterKeyword').value;
+            const level = document.getElementById('filterLevel').value;
+            let url = `/api/logs?`;
+            if(ip) url += `ip=${ip}&`;
+            if(keyword) url += `keyword=${keyword}&`;
+            if(level) url += `level=${level}&`;
+            const res = await fetch(url);
+            const logs = await res.json();
+            const tbody = document.querySelector('#logTable tbody');
+            tbody.innerHTML = '';
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                if(log.msg.includes('phishing')) tr.className = 'phishing';
+                else if(log.msg.includes('Suspicious')) tr.className = 'suspicious';
+                tr.innerHTML = `<td>${log.datetime}</td>
+                                <td>${log.level}</td>
+                                <td>${log.ip}</td>
+                                <td>${log.msg}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        loadLogs();
+    </script>
+</body>
+</html>
