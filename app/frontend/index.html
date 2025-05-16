@@ -3,20 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Currency Converter: EUR to PLN</title>
+    <title>Secure Bank Transfer</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Currency Converter: EUR to PLN</h1>
-        <form id="conversionForm">
-            <label for="amount">Amount in Euros:</label>
+        <div class="bank-header">
+            <i class="fas fa-university fa-2x"></i>
+            <h1>Secure Bank</h1>
+            <span class="soc-badge"><i class="fas fa-shield-alt"></i> SOC Monitored</span>
+        </div>
+        <form id="transferForm">
+            <div class="user-row">
+                <div>
+                    <label>Sender:</label>
+                    <span id="senderName"></span>
+                </div>
+                <div>
+                    <label>Recipient:</label>
+                    <span id="recipientName"></span>
+                </div>
+            </div>
+            <label for="amount">Amount in EUR:</label>
             <input type="text" id="amount" name="amount" placeholder="e.g. 100.00" required />
-            <input type="submit" value="Convert" />
+            <input type="submit" value="Transfer" />
         </form>
         <div id="resultSection" class="result-section" style="display: none;">
-            <h2>Result: <span id="conversionResult"></span> PLN</h2>
+            <h2>Transfer Result: <span id="conversionResult"></span> PLN</h2>
             <small id="rateInfo" style="display: none; margin-top: 5px; color: #555;"></small>
         </div>
         <div id="errorSection" class="error-section" style="display: none;">
