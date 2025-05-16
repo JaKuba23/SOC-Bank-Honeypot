@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter: EUR to PLN</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Currency Converter: EUR to PLN</h1>
+        <form id="conversionForm">
+            <label for="amount">Amount in Euros:</label>
+            <input type="text" id="amount" name="amount" placeholder="e.g. 100.00" required />
+            <input type="submit" value="Convert" />
+        </form>
+        <div id="resultSection" class="result-section" style="display: none;">
+            <h2>Result: <span id="conversionResult"></span> PLN</h2>
+            <small id="rateInfo" style="display: none; margin-top: 5px; color: #555;"></small>
+        </div>
+        <div id="errorSection" class="error-section" style="display: none;">
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+    <script src="main.js" defer></script>
+</body>
+</html>
