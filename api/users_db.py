@@ -5,21 +5,21 @@ USERS = [
     {
         "username": "admin",
         "password": hashlib.sha256("admin".encode()).hexdigest(),
-        "fullname": "Anna Nowak",
+        "fullname": "Admin Admin",
         "account": "PL61109010140000071219812874",
         "balance": 100000000000.00
     },
     {
-        "username": "jan",
+        "username": "William",
         "password": hashlib.sha256("tajnehaslo".encode()).hexdigest(),
-        "fullname": "Jan Kowalski",
+        "fullname": "William Smith",
         "account": "PL27114020040000300201355387",
         "balance": 8000.00
     },
     {
-        "username": "ewa",
+        "username": "Emma",
         "password": hashlib.sha256("qwerty".encode()).hexdigest(),
-        "fullname": "Ewa Szymańska",
+        "fullname": "Emma Johnson",
         "account": "PL30102010260000042270201111",
         "balance": 12000.00
     }
