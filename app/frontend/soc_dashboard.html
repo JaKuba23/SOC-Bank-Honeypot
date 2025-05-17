@@ -3,73 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <title>SOC Dashboard - Honeypot</title>
-    <link rel="stylesheet" href="soc_dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <style>
-        table { width: 100%; border-collapse: collapse; margin-top: 20px;}
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left;}
-        th { background: #f4f7f6;}
-        .phishing { background: #ffe6e6;}
-        .suspicious { background: #fffbe6;}
+        body {
+            background: #181c24;
+            color: #f1f1f1;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background: #232837;
+            border-radius: 12px;
+            box-shadow: 0 0 30px #0008;
+            padding: 30px 30px 20px 30px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .filters input, .filters select, .filters button {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            font-size: 15px;
+        }
+        .filters button {
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .filters button:hover {
+            background: #0056b3;
+        }
+        #map {
+            height: 320px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #0006;
+        }
+        #chart {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            background: #232837;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #0006;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #232837;
+        }
+        th, td {
+            border: 1px solid #333a;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #232837;
+            color: #7ecfff;
+        }
+        tr.phishing { background: #ff3b3b22; }
+        tr.suspicious { background: #ffe06622; }
+        tr:hover { background: #2a2f43; transition: background 0.2s; }
+        #testResults {
+            margin-top: 15px;
+            color: #7ecfff;
+            font-size: 15px;
+        }
+        @media (max-width: 900px) {
+            .container { padding: 10px; }
+            #map { height: 200px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>SOC Dashboard</h1>
-        <div>
-            <input type="text" id="filterIp" placeholder="Filter by IP">
-            <input type="text" id="filterKeyword" placeholder="Keyword">
-            <select id="filterLevel">
-                <option value="">All Levels</option>
-                <option value="WARNING">WARNING</option>
-                <option value="INFO">INFO</option>
-            </select>
-            <button onclick="loadLogs()">Filter</button>
-            <button onclick="runTestTransfers()">Run Test Transfers</button>
-        </div>
-        <table id="logTable">
-            <thead>
-                <tr>
-                    <th>Date/Time</th>
-                    <th>Level</th>
-                    <th>IP</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <div id="testResults"></div>
+<div class="container">
+    <h1>SOC Dashboard</h1>
+    <div class="filters">
+        <input type="text" id="filterIp" placeholder="Filter by IP">
+        <input type="text" id="filterKeyword" placeholder="Keyword">
+        <select id="filterLevel">
+            <option value="">All Levels</option>
+            <option value="WARNING">WARNING</option>
+            <option value="INFO">INFO</option>
+        </select>
+        <button onclick="loadLogs()">Filter</button>
+        <button onclick="runTestTransfers()">Run Test Transfers</button>
     </div>
-    <script>
-        async function loadLogs() {
-            const ip = document.getElementById('filterIp').value;
-            const keyword = document.getElementById('filterKeyword').value;
-            const level = document.getElementById('filterLevel').value;
-            let url = `http://localhost:5000/api/logs?`;
-            if(ip) url += `ip=${ip}&`;
-            if(keyword) url += `keyword=${keyword}&`;
-            if(level) url += `level=${level}&`;
-            const res = await fetch(url);
-            const logs = await res.json();
-            const tbody = document.querySelector('#logTable tbody');
-            tbody.innerHTML = '';
-            logs.forEach(log => {
-                const tr = document.createElement('tr');
-                if(log.msg.includes('phishing')) tr.className = 'phishing';
-                else if(log.msg.includes('Suspicious')) tr.className = 'suspicious';
-                tr.innerHTML = `<td>${log.datetime}</td>
-                                <td>${log.level}</td>
-                                <td>${log.ip}</td>
-                                <td>${log.msg}</td>`;
-                tbody.appendChild(tr);
-            });
-        }
-        async function runTestTransfers() {
-            const res = await fetch('http://localhost:5000/api/test-transfers', {method: 'POST'});
+    <div id="map"></div>
+    <canvas id="chart"></canvas>
+    <table id="logTable">
+        <thead>
+        <tr>
+            <th>Date/Time</th>
+            <th>Level</th>
+            <th>IP</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <div id="testResults"></div>
+</div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let map, markers = [];
+let chart, chartData = {};
+
+function initMap() {
+    map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+function clearMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+}
+
+async function geoLocateIPs(ips) {
+    // ip-api.com free endpoint, batch up to 100 IPs
+    const uniqueIps = [...new Set(ips.filter(ip => ip && ip !== '127.0.0.1' && ip !== '::1'))];
+    const locations = {};
+    for (const ip of uniqueIps) {
+        try {
+            const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,lat,lon,query`);
             const data = await res.json();
-            document.getElementById('testResults').textContent = "Test transfers: " + JSON.stringify(data.results, null, 2);
-            loadLogs();
+            if (data.status === "success") locations[ip] = data;
+        } catch {}
+    }
+    return locations;
+}
+
+function updateChart(logs) {
+    // Liczba incydentów na godzinę
+    chartData = {};
+    logs.forEach(log => {
+        const hour = log.datetime.slice(0, 13) + ":00";
+        chartData[hour] = (chartData[hour] || 0) + 1;
+    });
+    const labels = Object.keys(chartData).sort();
+    const data = labels.map(l => chartData[l]);
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Incidents per hour',
+                data: data,
+                borderColor: '#7ecfff',
+                backgroundColor: '#232837',
+                fill: false,
+                tension: 0.3,
+                pointRadius: 3,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: '#7ecfff' } } },
+            scales: {
+                x: { ticks: { color: '#7ecfff' } },
+                y: { ticks: { color: '#7ecfff' }, beginAtZero: true }
+            }
         }
-        loadLogs();
-    </script>
+    });
+}
+
+async function loadLogs() {
+    const ip = document.getElementById('filterIp').value;
+    const keyword = document.getElementById('filterKeyword').value;
+    const level = document.getElementById('filterLevel').value;
+    let url = `http://localhost:5000/api/logs?`;
+    if(ip) url += `ip=${ip}&`;
+    if(keyword) url += `keyword=${keyword}&`;
+    if(level) url += `level=${level}&`;
+    const res = await fetch(url);
+    const logs = await res.json();
+
+    // Tabela logów
+    const tbody = document.querySelector('#logTable tbody');
+    tbody.innerHTML = '';
+    logs.forEach(log => {
+        const tr = document.createElement('tr');
+        if(log.msg.includes('phishing')) tr.className = 'phishing';
+        else if(log.msg.includes('Suspicious')) tr.className = 'suspicious';
+        tr.innerHTML = `<td>${log.datetime}</td>
+                        <td>${log.level}</td>
+                        <td>${log.ip}</td>
+                        <td>${log.msg}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Mapa: zaznacz IP
+    clearMarkers();
+    const ipList = logs.map(l => l.ip);
+    const locations = await geoLocateIPs(ipList);
+    for (const ip in locations) {
+        const loc = locations[ip];
+        const marker = L.marker([loc.lat, loc.lon]).addTo(map)
+            .bindPopup(`<b>${ip}</b><br>${loc.city || ''}, ${loc.country || ''}`);
+        markers.push(marker);
+    }
+
+    // Animacja markerów
+    markers.forEach((m, i) => setTimeout(() => m.openPopup(), 400 + i*200));
+    setTimeout(() => markers.forEach(m => m.closePopup()), 3000);
+
+    // Wykres
+    updateChart(logs);
+}
+
+async function runTestTransfers() {
+    const res = await fetch('http://localhost:5000/api/test-transfers', {method: 'POST'});
+    const data = await res.json();
+    document.getElementById('testResults').textContent = "Test transfers: " + JSON.stringify(data.results, null, 2);
+    loadLogs();
+}
+
+initMap();
+loadLogs();
+</script>
 </body>
 </html>

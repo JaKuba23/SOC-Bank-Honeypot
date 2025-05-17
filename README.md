@@ -20,6 +20,11 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 
 ## Architecture
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/github/explore/main/topics/soc/soc.png" width="120" align="right" alt="SOC" />
+</p>
+
+```
 +--------+        +---------------------+        +---------------------+
 |  User  |<-----> | Frontend (HTML/JS)  |<-----> | Flask Backend (API) |
 +--------+        +---------------------+        +---------------------+
@@ -43,7 +48,7 @@ A Python-based honeypot and security monitoring project that simulates a secure 
                                             +--------------------------+
                                             | SIEM/SOC Tools           |
                                             +--------------------------+
-
+```
 
 ---
 
@@ -87,8 +92,7 @@ A Python-based honeypot and security monitoring project that simulates a secure 
      - **Emma / qwerty**
 
 4. **Open the SOC dashboard:**
-   - Automatically opens at [http://127.0.0.1:5001/dashboard](http://127.0.0.1:5001/dashboard)
-   - Or open `app/frontend/soc_dashboard.html` in your browser
+   - Go to [http://localhost:8080/soc_dashboard.html](http://localhost:8080/soc_dashboard.html)
 
 5. **Run automated tests (optional, in a separate terminal):**
 

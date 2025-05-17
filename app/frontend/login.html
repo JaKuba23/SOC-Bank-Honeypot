@@ -4,56 +4,6 @@
     <meta charset="UTF-8">
     <title>Bank Login</title>
     <link rel="stylesheet" href="login.css">
-    <style>
-        body {
-            background: #e6effc;
-            min-height: 100vh;
-        }
-        .container {
-            margin: 80px auto;
-            max-width: 400px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px #b3c6e0;
-            padding: 40px 30px;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        label {
-            display: block;
-            margin-top: 15px;
-        }
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border-radius: 5px;
-            border: 1px solid #b3c6e0;
-            font-size: 16px;
-        }
-        input[type="submit"] {
-            width: 100%;
-            margin-top: 25px;
-            padding: 12px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-        #loginError {
-            color: #721c24;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -67,7 +17,7 @@
         </form>
         <div id="loginError"></div>
     </div>
-    <script>
+        <script>
     document.getElementById('loginForm').onsubmit = async function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value.trim();
@@ -87,5 +37,8 @@
         }
     }
     </script>
+        <script>
+            document.getElementById('loginError').style.display = 'none';
+        </script>
 </body>
 </html>
