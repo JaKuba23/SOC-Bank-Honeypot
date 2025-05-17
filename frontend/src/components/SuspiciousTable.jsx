@@ -28,7 +28,7 @@ export default function SuspiciousTable() {
         </thead>
         <tbody>
           {logs.slice().reverse().map((log, i) => (
-            <tr key={i} className={log.level === "CRITICAL" ? "phishing" : "suspicious"}>
+            <tr key={i} className={`log-level-${log.level}`}>
               <td>{log.datetime}</td>
               <td>{log.level}</td>
               <td>{log.ip}</td>

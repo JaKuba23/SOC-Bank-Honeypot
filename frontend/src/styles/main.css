@@ -269,9 +269,19 @@ html[data-theme="dark"] tbody tr:hover {
 }
 
 /* Log Levels & Transaction Types */
-tr.log-level-WARNING, tr.log-level-WARNING td { background-color: var(--log-warning-bg) !important; color: var(--log-warning-text) !important; }
-tr.log-level-CRITICAL, tr.log-level-CRITICAL td { background-color: var(--log-critical-bg) !important; color: var(--log-critical-text) !important; font-weight: bold; }
-
+tr.log-level-INFO, tr.log-level-INFO td {
+  background-color: #e8f5e9 !important;
+  color: #388e3c !important; /* zielony */
+}
+tr.log-level-WARNING, tr.log-level-WARNING td {
+  background-color: #fff3cd !important;
+  color: #b71c1c !important; /* czerwony */
+}
+tr.log-level-CRITICAL, tr.log-level-CRITICAL td {
+  background-color: #f8d7da !important;
+  color: #7b1fa2 !important; /* bordowy/fiolet */
+  font-weight: bold;
+}
 tr.incoming-tx { background-color: var(--tx-incoming-bg-row); }
 tr.outgoing-tx { background-color: var(--tx-outgoing-bg-row); }
 tr.incoming-tx td:nth-child(4) { color: var(--tx-incoming-text); font-weight: 500; } /* Amount column */

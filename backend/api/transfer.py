@@ -1,12 +1,12 @@
 
 from flask import Flask, request, jsonify, session
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
+from flask_cors import cross_origin
 from api.honeypot_logger import HoneypotLogger
 from api.phishing_detector import PhishingDetector
 from api.users_db import USERS, get_user_by_username, get_user_by_account, verify_password, update_user_transaction
 import random
 from datetime import datetime, timedelta
-import logging
 
 app = Flask(__name__)
 app.secret_key = "your_very_secret_key_here_please_change_it_for_real_project"
@@ -58,6 +58,7 @@ def login():
             HoneypotLogger.log_suspicious(log_msg, request.remote_addr)
         app.logger.warning(log_msg + f" IP: {request.remote_addr}")
         return jsonify({"logged_in": False, "message": "Invalid username or password"}), 401
+
 @app.route('/api/transfer', methods=['POST'])
 @cross_origin(origins=["http://localhost:3000"], supports_credentials=True)
 def transfer():
@@ -139,37 +140,105 @@ def users_list_api(): # Zmieniona nazwa funkcji
     ]
     return jsonify(user_list_data)
 
+def _handle_valid_transfer(data, ip, now):
+    sender = get_user_by_username(data.get("sender"))
+    recipient = get_user_by_username(data.get("recipient"))
+    amount = float(data.get("amount", 1))
+    
+    if not sender or not recipient or sender["balance"] < amount:
+        return jsonify({"error": "Invalid users or insufficient funds"}), 400
+        
+    # Process valid transfer
+    sender_tx = {
+        "type": "outgoing", "recipient_name": recipient['fullname'], "recipient_account": recipient['account'],
+        "amount_eur": -amount, "datetime": now, "ip": ip
+    }
+    recipient_tx = {
+        "type": "incoming", "sender_name": sender['fullname'], "sender_account": sender['account'],
+        "amount_eur": amount, "datetime": now, "ip": ip
+    }
+    update_user_transaction(sender['id'], -amount, sender_tx)
+    update_user_transaction(recipient['id'], amount, recipient_tx)
+    HoneypotLogger.log_transfer(ip, sender['fullname'], recipient['fullname'], amount)
+    return jsonify({"message": "Valid transfer simulated"}), 200
+
+def _handle_invalid_transfer(data, ip):
+    sender = get_user_by_username(data.get("sender"))
+    recipient = get_user_by_username(data.get("recipient"))
+    amount = float(data.get("amount", 1))
+    
+    if not sender or not recipient:
+        HoneypotLogger.log_suspicious(f"Transfer attempt to invalid recipient: {data.get('recipient')}", ip)
+        return jsonify({"message": "Invalid recipient transfer simulated"}), 200
+    if sender["balance"] < amount:
+        HoneypotLogger.log_suspicious(f"Transfer attempt with insufficient funds by {sender['username']}", ip)
+        return jsonify({"message": "Insufficient funds transfer simulated"}), 200
+    return jsonify({"error": "Invalid test"}), 400
+
+def _handle_failed_login(data, ip):
+    username = data.get("username", "unknown")
+    detector.failed_login_attempt(ip, username)
+    HoneypotLogger.log_suspicious(f"Failed login attempt for user '{username}'", ip)
+    return jsonify({"message": "Failed login simulated"}), 200
+
+def _handle_phishing(data, ip):
+    username = data.get("username", "unknown")
+    for _ in range(5):
+        detector.failed_login_attempt(ip, username)
+    HoneypotLogger.log_phishing_attempt(ip, f"Multiple failed logins for '{username}' (phishing simulation)")
+    return jsonify({"message": "Phishing attempt simulated"}), 200
+
 @app.route('/api/test-transfers', methods=['POST'])
 @cross_origin(origins=["http://localhost:3000"], supports_credentials=True)
 def test_transfers():
-    # Symulacja: losowo przelew, failed login, phishing
-    event = random.choice(["transfer", "failed_login", "phishing"])
-    ip = f"10.0.{random.randint(1,254)}.{random.randint(1,254)}"
-    if event == "transfer":
-        users = [u for u in USERS if u.get("role", "user") == "user"]
-        if len(users) < 2:
-            return jsonify({"error": "Not enough users"}), 400
+    data = request.get_json() or {}
+    ip = request.remote_addr or "127.0.0.1"
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    users = [u for u in USERS if u.get("role", "user") == "user"]
+    # 70% INFO, 15% WARNING, 10% FRAUD (CRITICAL), 5% phishing
+    event_types = ["valid_transfer", "invalid_transfer", "fraud", "phishing"]
+    weights = [0.7, 0.15, 0.1, 0.05]  # 70% info, 15% warning, 10% critical, 5% phishing
+
+    event = random.choices(event_types, weights=weights)[0]
+
+    if event == "valid_transfer":
         sender, recipient = random.sample(users, 2)
-        amount = round(random.uniform(1, min(100, sender["balance"])), 2)
-        current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sender_tx_details = {
+        amount = round(random.uniform(1, min(200, sender["balance"])), 2)
+        sender_tx = {
             "type": "outgoing", "recipient_name": recipient['fullname'], "recipient_account": recipient['account'],
-            "amount_eur": -amount, "datetime": current_time_str, "ip": ip
+            "amount_eur": -amount, "datetime": now, "ip": ip
         }
-        recipient_tx_details = {
+        recipient_tx = {
             "type": "incoming", "sender_name": sender['fullname'], "sender_account": sender['account'],
-            "amount_eur": amount, "datetime": current_time_str, "ip": ip
+            "amount_eur": amount, "datetime": now, "ip": ip
         }
-        update_user_transaction(sender['id'], -amount, sender_tx_details)
-        update_user_transaction(recipient['id'], amount, recipient_tx_details)
+        update_user_transaction(sender['id'], -amount, sender_tx)
+        update_user_transaction(recipient['id'], amount, recipient_tx)
         HoneypotLogger.log_transfer(ip, sender['fullname'], recipient['fullname'], amount)
-        return jsonify({"message": "Simulated transfer"}), 200
-    elif event == "failed_login":
-        HoneypotLogger.log_suspicious("Simulated failed login attempt.", ip)
-        return jsonify({"message": "Simulated failed login"}), 200
-    else:
-        HoneypotLogger.log_phishing_attempt(ip, "Simulated phishing attempt.")
-        return jsonify({"message": "Simulated phishing attempt"}), 200
+        return jsonify({"message": "Valid transfer simulated"}), 200
+
+    elif event == "invalid_transfer":
+        sender = random.choice(users)
+        recipient = {"fullname": "Nonexistent", "account": "ACC99999999"}
+        amount = round(sender["balance"] + random.uniform(100, 1000), 2)
+        HoneypotLogger.log_suspicious(f"Transfer attempt of {amount} EUR to invalid recipient: {recipient['account']}", ip)
+        return jsonify({"message": "Invalid recipient transfer simulated"}), 200
+
+    elif event == "phishing":
+        username = random.choice([u["username"] for u in users])
+        for _ in range(5):
+            detector.failed_login_attempt(ip, username)
+        HoneypotLogger.log_phishing_attempt(ip, f"Multiple failed logins for '{username}' (phishing simulation)")
+        return jsonify({"message": "Phishing attempt simulated"}), 200
+
+    elif event == "fraud":
+        sender, recipient = random.sample(users, 2)
+        amount = round(random.uniform(1000, 5000), 2)
+        msg = f"FRAUD ALERT: Unusual transfer {amount} EUR from {sender['fullname']} to {recipient['fullname']} (flagged as fraud)"
+        HoneypotLogger.log_phishing_attempt(ip, msg)
+        return jsonify({"message": "Fraudulent transfer attempt simulated"}), 200
+
+    return jsonify({"message": "Unknown event"}), 200
             
 @app.route('/api/live-transfers', methods=['GET'])
 def live_transfers():
