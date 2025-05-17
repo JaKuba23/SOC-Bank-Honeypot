@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function TransfersTable() {
   const [transfers, setTransfers] = useState([]);
@@ -28,12 +28,12 @@ export default function TransfersTable() {
           </tr>
         </thead>
         <tbody>
-          {transfers.slice().reverse().map((t, i) => (
+          {transfers.map((t, i) => (
             <tr key={i}>
               <td>{t.datetime}</td>
-              <td>{t.from}</td>
-              <td>{t.to}</td>
-              <td>{t.amount}</td>
+              <td>{t.sender}</td>
+              <td>{t.recipient}</td>
+              <td>{t.amount_eur}</td>
               <td>{t.ip}</td>
             </tr>
           ))}

@@ -15,7 +15,7 @@ export default function SocDashboard() {
       method: 'POST',
       credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}) // nawet jeśli nie potrzebujesz danych, wyślij pusty obiekt
+      body: JSON.stringify({}) // nie trzeba nic wysyłać, backend sam losuje zdarzenie
     });
 
     if (!response.ok) {

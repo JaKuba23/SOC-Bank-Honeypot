@@ -1,27 +1,22 @@
 
 from flask import Flask, request, jsonify, session
-from flask_cors import CORS
-from api.fetcher import fetch_exchange_rate
-from api.utils import convert_eur_to_pln
+from flask_cors import CORS, cross_origin
 from api.honeypot_logger import HoneypotLogger
 from api.phishing_detector import PhishingDetector
 from api.users_db import USERS, get_user_by_username, get_user_by_account, verify_password, update_user_transaction
 import random
 from datetime import datetime, timedelta
 import logging
-import requests
-from flask_cors import cross_origin
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 app = Flask(__name__)
-app.secret_key = "your_very_secret_key_here_please_change_it_for_real_project" # ZMIEŃ TO!
+app.secret_key = "your_very_secret_key_here_please_change_it_for_real_project"
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax', # 'Strict' dla większego bezpieczeństwa, jeśli nie ma problemów
-    SESSION_COOKIE_SECURE=False # Na produkcji True, jeśli używasz HTTPS
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=False
 )
-app.permanent_session_lifetime = timedelta(hours=1) # Czas trwania sesji
+app.permanent_session_lifetime = timedelta(hours=1)
 
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 detector = PhishingDetector()
@@ -63,6 +58,46 @@ def login():
             HoneypotLogger.log_suspicious(log_msg, request.remote_addr)
         app.logger.warning(log_msg + f" IP: {request.remote_addr}")
         return jsonify({"logged_in": False, "message": "Invalid username or password"}), 401
+@app.route('/api/transfer', methods=['POST'])
+@cross_origin(origins=["http://localhost:3000"], supports_credentials=True)
+def transfer():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    recipient_account = data.get('recipient_account')
+    amount_eur = data.get('amount_eur')
+    try:
+        amount_eur = float(amount_eur)
+    except Exception:
+        return jsonify({"error": "Invalid amount"}), 400
+
+    sender_id = session['user_id']
+    sender = next((u for u in USERS if u['id'] == sender_id), None)
+    recipient = get_user_by_account(recipient_account)
+    if not sender or not recipient:
+        return jsonify({"error": "Invalid sender or recipient"}), 400
+    if sender['id'] == recipient['id']:
+        return jsonify({"error": "Cannot transfer to yourself"}), 400
+    if sender['balance'] < amount_eur:
+        return jsonify({"error": "Insufficient funds"}), 400
+
+    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sender_tx_details = {
+        "type": "outgoing", "recipient_name": recipient['fullname'], "recipient_account": recipient['account'],
+        "amount_eur": -amount_eur, "datetime": current_time_str, "ip": request.remote_addr
+    }
+    recipient_tx_details = {
+        "type": "incoming", "sender_name": sender['fullname'], "sender_account": sender['account'],
+        "amount_eur": amount_eur, "datetime": current_time_str, "ip": request.remote_addr
+    }
+    update_user_transaction(sender['id'], -amount_eur, sender_tx_details)
+    update_user_transaction(recipient['id'], amount_eur, recipient_tx_details)
+    HoneypotLogger.log_transfer(request.remote_addr, sender['fullname'], recipient['fullname'], amount_eur)
+    return jsonify({"message": "Transfer successful", "new_balance": sender['balance']}), 200
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
@@ -75,27 +110,20 @@ def logout():
 @app.route('/api/me', methods=['GET'])
 def me():
     if 'user_id' not in session:
-        app.logger.warning(f"Access to /api/me without session. IP: {request.remote_addr}")
-        return jsonify({"logged_in": False, "message": "User not authenticated"}), 401
-
+        return jsonify({"logged_in": False}), 401
     user_id = session['user_id']
     user = next((u for u in USERS if u['id'] == user_id), None)
-    if user:
-        app.logger.debug(f"Active session for user: {user['username']}, Role: {user.get('role', 'user')}. IP: {request.remote_addr}")
-        return jsonify({
-            "logged_in": True,
-            "id": user["id"],
-            "username": user["username"],
-            "fullname": user["fullname"],
-            "account": user["account"],
-            "balance": user["balance"],
-            "history": user.get("history", []),
-            "role": user.get("role", "user")
-        }), 200
-    else: # Sytuacja awaryjna, user_id w sesji, ale nie ma go w USERS
-        app.logger.error(f"User ID {user_id} in session but not found in USERS. Clearing session. IP: {request.remote_addr}")
+    if not user:
         session.clear()
-        return jsonify({"logged_in": False, "message": "Session error, user not found"}), 401
+        return jsonify({"logged_in": False}), 401
+    return jsonify({
+        "logged_in": True,
+        "fullname": user["fullname"],
+        "account": user["account"],
+        "balance": user["balance"],
+        "role": user.get("role", "user"),
+        "history": user.get("history", [])
+    })
 
 
 @app.route('/api/users', methods=['GET'])
@@ -114,104 +142,35 @@ def users_list_api(): # Zmieniona nazwa funkcji
 @app.route('/api/test-transfers', methods=['POST'])
 @cross_origin(origins=["http://localhost:3000"], supports_credentials=True)
 def test_transfers():
-    if 'user_id' not in session:
-        HoneypotLogger.log_suspicious("Unauthorized transfer attempt (no session).", request.remote_addr)
-        return jsonify({"error": "Not logged in"}), 401
-
-    data = request.get_json()
-    if not data: return jsonify({"error": "No data provided"}), 400
-
-    recipient_account = data.get('recipient_account')
-    amount_eur_str = data.get('amount_eur')
-    
-    sender_id = session['user_id']
-    sender = next((u for u in USERS if u['id'] == sender_id), None)
-    
-    if not sender: # Sytuacja awaryjna
-        HoneypotLogger.log_suspicious(f"Critical: Sender with ID {sender_id} (from session) not found for transfer.", request.remote_addr)
-        session.clear() # Wyczyść sesję, bo jest niespójna
-        return jsonify({"error": "Sender not found, session cleared"}), 400
-
-    app.logger.info(f"Transfer attempt: From {sender['username']} ({sender['account']}) to account {recipient_account} for {amount_eur_str} EUR. IP: {request.remote_addr}")
-
-    if not recipient_account or not amount_eur_str:
-        HoneypotLogger.log_suspicious(f"Transfer attempt with missing data by {sender['username']}.", request.remote_addr)
-        return jsonify({"error": "Recipient account and amount are required"}), 400
-
-    try:
-        amount_eur = float(amount_eur_str)
-        if not (0.01 <= amount_eur <= 1000000): # Walidacja kwoty
-            raise ValueError("Amount must be positive and within reasonable limits.")
-    except ValueError as e:
-        HoneypotLogger.log_suspicious(f"Invalid transfer amount '{amount_eur_str}' by {sender['username']}. Error: {e}", request.remote_addr)
-        return jsonify({"error": f"Invalid amount: {e}"}), 400
-
-    recipient = get_user_by_account(recipient_account)
-    if not recipient:
-        HoneypotLogger.log_suspicious(f"Transfer attempt to non-existent account '{recipient_account}' by {sender['username']}.", request.remote_addr)
-        return jsonify({"error": "Recipient account not found"}), 404
-
-    if sender['id'] == recipient['id']: # Sprawdzenie po ID, bo konto może być takie samo w teorii (choć tu nie)
-        HoneypotLogger.log_suspicious(f"Self-transfer attempt by {sender['username']}.", request.remote_addr)
-        return jsonify({"error": "Cannot transfer to yourself"}), 400
-    
-    if sender['balance'] < amount_eur:
-        HoneypotLogger.log_suspicious(f"Insufficient funds for transfer by {sender['username']}. Balance: {sender['balance']}, Amount: {amount_eur}", request.remote_addr)
-        return jsonify({"error": "Insufficient funds"}), 400
-
-    try:
-        exchange_rate = fetch_exchange_rate()
-        amount_pln = convert_eur_to_pln(amount_eur, exchange_rate) if exchange_rate else amount_eur # Fallback
-        
-        current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        sender_tx_details = {
-            "type": "outgoing", "recipient_name": recipient['fullname'], "recipient_account": recipient['account'],
-            "amount_eur": -amount_eur, "amount_pln": -amount_pln if amount_pln else None, "datetime": current_time_str, "ip": request.remote_addr
-        }
-        update_user_transaction(sender['id'], -amount_eur, sender_tx_details)
-
-        recipient_tx_details = {
-            "type": "incoming", "sender_name": sender['fullname'], "sender_account": sender['account'],
-            "amount_eur": amount_eur, "amount_pln": amount_pln if amount_pln else None, "datetime": current_time_str, "ip": request.remote_addr
-        }
-        update_user_transaction(recipient['id'], amount_eur, recipient_tx_details)
-
-        HoneypotLogger.log_transfer(request.remote_addr, sender['fullname'], recipient['fullname'], amount_eur)
-        app.logger.info(f"Transfer successful: {amount_eur} EUR from {sender['username']} to {recipient['username']}")
-        return jsonify({
-            "message": "Transfer successful", "new_balance": sender['balance'],
-            "recipient_name": recipient['fullname'], "amount_eur": amount_eur,
-            "amount_pln": amount_pln if amount_pln else "N/A (rate unavailable)"
-        }), 200
-    except requests.exceptions.RequestException as e:
-        HoneypotLogger.log_suspicious(f"NBP API Error during transfer by {sender['username']}: {e}", request.remote_addr)
-        app.logger.error(f"NBP API Error during transfer: {e}")
-        # Mimo błędu NBP, przelew w EUR może się odbyć, ale bez kwoty w PLN
-        # Można by to obsłużyć inaczej, np. blokując przelew lub informując użytkownika
-        # Tutaj dla uproszczenia, przelew idzie, ale amount_pln będzie None
+    # Symulacja: losowo przelew, failed login, phishing
+    event = random.choice(["transfer", "failed_login", "phishing"])
+    ip = f"10.0.{random.randint(1,254)}.{random.randint(1,254)}"
+    if event == "transfer":
+        users = [u for u in USERS if u.get("role", "user") == "user"]
+        if len(users) < 2:
+            return jsonify({"error": "Not enough users"}), 400
+        sender, recipient = random.sample(users, 2)
+        amount = round(random.uniform(1, min(100, sender["balance"])), 2)
         current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sender_tx_details = {
             "type": "outgoing", "recipient_name": recipient['fullname'], "recipient_account": recipient['account'],
-            "amount_eur": -amount_eur, "amount_pln": None, "datetime": current_time_str, "ip": request.remote_addr
+            "amount_eur": -amount, "datetime": current_time_str, "ip": ip
         }
-        update_user_transaction(sender['id'], -amount_eur, sender_tx_details)
         recipient_tx_details = {
             "type": "incoming", "sender_name": sender['fullname'], "sender_account": sender['account'],
-            "amount_eur": amount_eur, "amount_pln": None, "datetime": current_time_str, "ip": request.remote_addr
+            "amount_eur": amount, "datetime": current_time_str, "ip": ip
         }
-        update_user_transaction(recipient['id'], amount_eur, recipient_tx_details)
-        HoneypotLogger.log_transfer(request.remote_addr, sender['fullname'], recipient['fullname'], amount_eur)
-        app.logger.info(f"Transfer successful (NBP API failed): {amount_eur} EUR from {sender['username']} to {recipient['username']}")
-        return jsonify({
-            "message": "Transfer successful (exchange rate unavailable)", "new_balance": sender['balance'],
-            "recipient_name": recipient['fullname'], "amount_eur": amount_eur, "amount_pln": "N/A"
-        }), 200
-    except Exception as e:
-        HoneypotLogger.log_suspicious(f"Generic error during transfer by {sender['username']}: {str(e)}", request.remote_addr)
-        app.logger.error(f"Unexpected error during transfer: {e}", exc_info=True)
-        return jsonify({"error": "An unexpected error occurred during the transfer."}), 500
-
+        update_user_transaction(sender['id'], -amount, sender_tx_details)
+        update_user_transaction(recipient['id'], amount, recipient_tx_details)
+        HoneypotLogger.log_transfer(ip, sender['fullname'], recipient['fullname'], amount)
+        return jsonify({"message": "Simulated transfer"}), 200
+    elif event == "failed_login":
+        HoneypotLogger.log_suspicious("Simulated failed login attempt.", ip)
+        return jsonify({"message": "Simulated failed login"}), 200
+    else:
+        HoneypotLogger.log_phishing_attempt(ip, "Simulated phishing attempt.")
+        return jsonify({"message": "Simulated phishing attempt"}), 200
+            
 @app.route('/api/live-transfers', methods=['GET'])
 def live_transfers():
     # Dostępne dla admina (frontend powinien to kontrolować)

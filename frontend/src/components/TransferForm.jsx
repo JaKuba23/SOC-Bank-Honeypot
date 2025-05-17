@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 
-export default function TransferForm({ onTransfer, selectedAccount }) {
+export default function TransferForm({ onTransfer }) {
   const [users, setUsers] = useState([]);
-  const [recipient, setRecipient] = useState(selectedAccount || "");
+  const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [result, setResult] = useState("");
   const [error, setError] = useState("");
@@ -13,10 +13,6 @@ export default function TransferForm({ onTransfer, selectedAccount }) {
       .then(setUsers);
   }, []);
 
-  useEffect(() => {
-    if (selectedAccount) setRecipient(selectedAccount);
-  }, [selectedAccount]);
-
   async function handleSubmit(e) {
     e.preventDefault();
     setResult("");
@@ -25,19 +21,23 @@ export default function TransferForm({ onTransfer, selectedAccount }) {
       setError("Recipient account and amount are required");
       return;
     }
-    const res = await fetch("http://localhost:5000/api/transfer", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ recipient_account: recipient, amount_eur: amount }),
-    });
-    const data = await res.json();
-    if (res.ok && data.new_balance !== undefined) {
-      setResult(`Transfer successful! New balance: ${data.new_balance.toFixed(2)} EUR`);
-      setAmount("");
-      if (onTransfer) onTransfer();
-    } else {
-      setError(data.error || "Transfer failed");
+    try {
+      const res = await fetch("http://localhost:5000/api/transfer", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipient_account: recipient, amount_eur: amount }),
+      });
+      const data = await res.json();
+      if (res.ok && data.new_balance !== undefined) {
+        setResult(`Transfer successful! New balance: ${data.new_balance.toFixed(2)} EUR`);
+        setAmount("");
+        if (onTransfer) onTransfer();
+      } else {
+        setError(data.error || "Transfer failed");
+      }
+    } catch (err) {
+      setError("Failed to connect to backend");
     }
   }
 

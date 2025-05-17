@@ -1,17 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function HistoryTable() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const fetchTransfers = () => {
-      fetch("http://localhost:5000/api/live-transfers")
-        .then(res => res.json())
-        .then(setHistory);
-    };
-    fetchTransfers();
-    const interval = setInterval(fetchTransfers, 3000);
-    return () => clearInterval(interval);
+    fetch("http://localhost:5000/api/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => setHistory(data.history || []));
   }, []);
 
   return (
@@ -21,20 +16,24 @@ export default function HistoryTable() {
         <thead>
           <tr>
             <th>Date/Time</th>
-            <th>From</th>
-            <th>To</th>
+            <th>Type</th>
+            <th>Counterparty</th>
             <th>Amount [EUR]</th>
             <th>IP</th>
           </tr>
         </thead>
         <tbody>
-          {history.slice().reverse().map((t, i) => (
+          {history.map((h, i) => (
             <tr key={i}>
-              <td>{t.datetime}</td>
-              <td>{t.from}</td>
-              <td>{t.to}</td>
-              <td>{t.amount}</td>
-              <td>{t.ip}</td>
+              <td>{h.datetime}</td>
+              <td>{h.type}</td>
+              <td>
+                {h.type === "incoming"
+                  ? `${h.sender_name} (${h.sender_account})`
+                  : `${h.recipient_name} (${h.recipient_account})`}
+              </td>
+              <td>{h.amount_eur}</td>
+              <td>{h.ip}</td>
             </tr>
           ))}
         </tbody>
