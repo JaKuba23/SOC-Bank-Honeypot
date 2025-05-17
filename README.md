@@ -1,6 +1,6 @@
-# Currency Phish & SOC Honeypot Dashboard
+# SOC Bank Honeypot Dashboard
 
-**Currency Phish & SOC Honeypot Dashboard** is a professional, visually appealing, and educational web application simulating an online banking system with integrated Security Operations Center (SOC) monitoring. Built with a modern React frontend and a Python Flask backend, this project demonstrates real-time detection, logging, and visualization of suspicious activities—key skills for SOC Analysts and cybersecurity professionals.
+**SOC Bank Honeypot Dashboard** is a professional, visually appealing, and educational web application simulating an online banking system with integrated Security Operations Center (SOC) monitoring. Built with a modern React frontend and a Python Flask backend, this project demonstrates real-time detection, logging, and visualization of suspicious activities—key skills for SOC Analysts and cybersecurity professionals.
 
 ---
 
