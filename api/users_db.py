@@ -3,11 +3,11 @@ import hashlib
 # Fake baza użytkowników (login, hasło, saldo, imię, nazwisko, numer konta)
 USERS = [
     {
-        "username": "anna",
-        "password": hashlib.sha256("haslo123".encode()).hexdigest(),
+        "username": "admin",
+        "password": hashlib.sha256("admin".encode()).hexdigest(),
         "fullname": "Anna Nowak",
         "account": "PL61109010140000071219812874",
-        "balance": 10000.00
+        "balance": 100000000000.00
     },
     {
         "username": "jan",

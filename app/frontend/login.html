@@ -4,23 +4,32 @@
     <meta charset="UTF-8">
     <title>Bank Login</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: #e6effc;
+            min-height: 100vh;
+        }
+        .container {
+            margin: 80px auto;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Bank Login</h1>
         <form id="loginForm">
             <label for="username">Username:</label>
-            <input type="text" id="username" required>
+            <input type="text" id="username" required autocomplete="username">
             <label for="password">Password:</label>
-            <input type="password" id="password" required>
+            <input type="password" id="password" required autocomplete="current-password">
             <input type="submit" value="Login">
         </form>
-        <div id="loginError" style="color:red; display:none;"></div>
+        <div id="loginError" style="color:#721c24; background:#f8d7da; border:1px solid #f5c6cb; margin-top:15px; padding:10px; border-radius:5px; display:none;"></div>
     </div>
     <script>
         document.getElementById('loginForm').onsubmit = async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const res = await fetch('http://127.0.0.1:5000/api/login', {
                 method: 'POST',
@@ -32,7 +41,7 @@
             if (data.success) {
                 window.location.href = "index.html";
             } else {
-                document.getElementById('loginError').textContent = data.error;
+                document.getElementById('loginError').textContent = data.error || "Login failed";
                 document.getElementById('loginError').style.display = 'block';
             }
         }
