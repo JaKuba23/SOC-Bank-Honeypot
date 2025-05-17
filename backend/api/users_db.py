@@ -4,9 +4,9 @@ USERS = [
         "id": 1,
         "username": "admin",
         "fullname": "Admin User",
-        "password_hash": "admin", # W rzeczywistości użyj hashowania!
+        "password_hash": "admin", 
         "account": "ACC00000001",
-        "balance": 10000000.00,  # Bardzo wysokie saldo dla admina do manualnych operacji
+        "balance": 10000000.00, 
         "history": [],
         "role": "admin"
     },

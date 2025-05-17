@@ -10,21 +10,32 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    const res = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-    if (res.ok && data.logged_in) {
-      if (data.user && data.user.role === "admin") {
-        window.location.href = "/soc-dashboard";
-      } else {
-        window.location.href = "/dashboard";
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        // jeśli backend nie odpowiada JSONem
+        setError("Cannot connect to server. Please try again later.");
+        return;
       }
-    } else {
-      setError(data.error || "Login failed");
+      if (res.ok && data.logged_in) {
+        if (data.user && data.user.role === "admin") {
+          window.location.href = "/soc-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      } else {
+        setError(data.message || data.error || "Invalid username or password.");
+      }
+    } catch (err) {
+      setError("Cannot connect to server. Please try again later.");
     }
   }
 

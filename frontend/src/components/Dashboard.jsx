@@ -18,18 +18,7 @@ export default function Dashboard() {
         if (res.ok) {
           const data = await res.json();
           setUser(data);
-          // Filtrowanie historii tylko do transakcji powiązanych z kontem użytkownika
-          const userAccount = data.account;
-          const filteredHistory = (data.history || []).filter(
-            h =>
-              h.sender_account === userAccount ||
-              h.recipient_account === userAccount ||
-              h.sender === data.fullname ||
-              h.recipient === data.fullname ||
-              h.sender_name === data.fullname ||
-              h.recipient_name === data.fullname
-          );
-          setHistory(filteredHistory);
+          setHistory(data.history || []);
         } else {
           setLoggedOut(true);
         }
@@ -72,7 +61,7 @@ export default function Dashboard() {
         <section className="panel">
           <TransferForm onTransfer={handleTransferSuccess} selectedAccount={null} />
         </section>
-        <HistoryTable history={history} />
+        <HistoryTable history={history} user={user} />
       </main>
       <footer>
         <p>&copy; {new Date().getFullYear()} Secure Bank. For educational purposes only.</p>
