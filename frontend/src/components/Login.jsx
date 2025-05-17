@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { ThemeContext } from "../context/ThemeContext";
 
 export default function Login() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,27 +29,32 @@ export default function Login() {
   }
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Bank Login</h2>
-        <input
-          type="text"
-          placeholder="Username"
-          autoFocus
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-        {error && <div className="error-msg">{error}</div>}
-      </form>
+    <div className="login-page">
+      <button className="theme-switcher" onClick={toggleTheme}>
+        {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      </button>
+      <div className="login-container">
+        <form className="login-form" onSubmit={handleSubmit}>
+          <h2>Bank Login</h2>
+          <input
+            type="text"
+            placeholder="Username"
+            autoFocus
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit">Login</button>
+          {error && <div className="error-msg">{error}</div>}
+        </form>
+      </div>
     </div>
   );
 }

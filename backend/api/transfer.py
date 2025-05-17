@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from flask_cors import cross_origin
@@ -21,8 +20,6 @@ app.permanent_session_lifetime = timedelta(hours=1)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 detector = PhishingDetector()
 
-# --- Endpointy API (login, logout, me, users, transfer - jak poprzednio, ale z drobnymi usprawnieniami) ---
-
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -40,11 +37,11 @@ def login():
         session.permanent = True
         session['user_id'] = user['id']
         session['username'] = user['username']
-        session['role'] = user.get('role', 'user') # Zapisz rolę w sesji
+        session['role'] = user.get('role', 'user')
         HoneypotLogger.log_info(f"User '{username}' logged in successfully.", request.remote_addr)
         app.logger.info(f"User '{username}' logged in successfully. Role: {session['role']}")
         return jsonify({
-        "logged_in": True,  # Backend zwraca "logged_in" zamiast "success"
+        "logged_in": True,
         "message": "Login successful",
         "user": {"username": user["username"], "fullname": user["fullname"], "role": user.get("role", "user")}
     }), 200
@@ -83,6 +80,8 @@ def transfer():
         return jsonify({"error": "Invalid sender or recipient"}), 400
     if sender['id'] == recipient['id']:
         return jsonify({"error": "Cannot transfer to yourself"}), 400
+    if recipient.get("role", "user") == "admin":
+        return jsonify({"error": "Cannot transfer to admin account"}), 400
     if sender['balance'] < amount_eur:
         return jsonify({"error": "Insufficient funds"}), 400
 
@@ -126,14 +125,12 @@ def me():
         "history": user.get("history", [])
     })
 
-
 @app.route('/api/users', methods=['GET'])
-def users_list_api(): # Zmieniona nazwa funkcji
+def users_list_api():
     if 'user_id' not in session:
         return jsonify({"error": "Not logged in"}), 401
     
     current_user_id = session.get('user_id')
-    # Zwracamy listę użytkowników bez bieżącego użytkownika, aby nie mógł sobie przelać
     user_list_data = [
         {"id": u["id"], "fullname": u["fullname"], "account": u["account"]}
         for u in USERS if u['id'] != current_user_id
@@ -148,7 +145,6 @@ def _handle_valid_transfer(data, ip, now):
     if not sender or not recipient or sender["balance"] < amount:
         return jsonify({"error": "Invalid users or insufficient funds"}), 400
         
-    # Process valid transfer
     sender_tx = {
         "type": "outgoing", "recipient_name": recipient['fullname'], "recipient_account": recipient['account'],
         "amount_eur": -amount, "datetime": now, "ip": ip
@@ -195,9 +191,8 @@ def test_transfers():
     ip = request.remote_addr or "127.0.0.1"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     users = [u for u in USERS if u.get("role", "user") == "user"]
-    # 70% INFO, 15% WARNING, 10% FRAUD (CRITICAL), 5% phishing
     event_types = ["valid_transfer", "invalid_transfer", "fraud", "phishing"]
-    weights = [0.7, 0.15, 0.1, 0.05]  # 70% info, 15% warning, 10% critical, 5% phishing
+    weights = [0.7, 0.15, 0.1, 0.05]
 
     event = random.choices(event_types, weights=weights)[0]
 
@@ -242,12 +237,10 @@ def test_transfers():
             
 @app.route('/api/live-transfers', methods=['GET'])
 def live_transfers():
-    # Dostępne dla admina (frontend powinien to kontrolować)
     return jsonify(HoneypotLogger.get_last_transfers(20))
 
 @app.route('/api/logs', methods=['GET'])
 def logs():
-    # Dostępne dla admina (frontend powinien to kontrolować)
     return jsonify(HoneypotLogger.get_last_logs(100))
 
 @app.route('/api/simulate-transfers', methods=['POST'])
@@ -256,18 +249,16 @@ def simulate_transfers():
     num_operations = random.randint(1, 2)
     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Tylko zwykli użytkownicy biorą udział w symulacji
     regular_users = [u for u in USERS if u.get('role', 'user') == 'user']
-    if len(regular_users) < 2: # Potrzebujemy co najmniej dwóch zwykłych użytkowników
+    if len(regular_users) < 2:
         return jsonify({"message": "Not enough regular users for simulation.", "results": []}), 200
 
-
     for _ in range(num_operations):
-        ip = f"10.1.{random.randint(1,254)}.{random.randint(1,254)}" # Inny zakres IP dla symulatora
+        ip = f"10.1.{random.randint(1,254)}.{random.randint(1,254)}"
         action_type = random.choice(["simulated_user_transfer", "failed_login_sim", "suspicious_access_sim"])
 
         if action_type == "simulated_user_transfer":
-            sender, recipient = random.sample(regular_users, 2) # Losowy nadawca i odbiorca (różni)
+            sender, recipient = random.sample(regular_users, 2)
             amount = round(random.uniform(5, 150), 2)
 
             if sender['balance'] >= amount:
@@ -313,6 +304,4 @@ def simulate_transfers():
     return jsonify({"message": f"{len(results)} test operations simulated.", "results": results}), 200
 
 if __name__ == '__main__':
-    # Uruchomienie serwera Flask
-    # W środowisku produkcyjnym użyj serwera WSGI jak Gunicorn lub Waitress
     app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=True)

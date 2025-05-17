@@ -32,19 +32,19 @@
   --log-critical-text: #721c24;
   --tx-incoming-text: #2e7d32;
   --tx-outgoing-text: #c62828;
-  --tx-incoming-bg-row: #e8f5e9; /* Dla całego wiersza */
-  --tx-outgoing-bg-row: #ffebee; /* Dla całego wiersza */
+  --tx-incoming-bg-row: #e8f5e9;
+  --tx-outgoing-bg-row: #ffebee;
 }
 
 html[data-theme="dark"] {
   --bg-primary: #121212;
   --bg-secondary: #1e1e1e;
-  --bg-header: #1f2937; /* Ciemniejszy niebieski/szary */
+  --bg-header: #1f2937;
   --bg-header-alt: #111827;
   --text-primary: #e0e0e0;
   --text-secondary: #b0b0b0;
   --text-on-header: #e0e0e0;
-  --text-accent: #60a5fa; /* Jaśniejszy niebieski */
+  --text-accent: #60a5fa;
   --text-error: #f87171;
   --text-success: #4ade80;
   --border-primary: #374151;
@@ -123,7 +123,6 @@ button:active {
   background-color: var(--button-secondary-hover-bg);
 }
 
-
 /* --- Layout & Header --- */
 .dashboard-container, .soc-dashboard-container {
   display: flex;
@@ -163,7 +162,7 @@ header .header-right {
 }
 .user-info .balance {
   font-weight: bold;
-  background-color: rgba(255,255,255,0.1); /* Przezroczyste tło dla lepszego kontrastu na obu motywach */
+  background-color: rgba(255,255,255,0.1);
   padding: 6px 10px;
   border-radius: 4px;
 }
@@ -177,7 +176,7 @@ header .header-right {
 .soc-panel-link, .back-to-dashboard-link {
   padding: 7px 12px;
   background-color: var(--button-warning-bg);
-  color: #000; /* Lepszy kontrast dla żółtego */
+  color: #000;
   font-weight: 500;
   border-radius: 4px;
 }
@@ -193,12 +192,11 @@ header .header-right {
     background-color: var(--button-secondary-hover-bg);
 }
 
-
 main {
   flex-grow: 1;
   padding: 20px;
   width: 100%;
-  max-width: 1800px; /* Szerszy kontent */
+  max-width: 1800px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -208,16 +206,15 @@ main {
   gap: 20px;
 }
 .user-grid {
-  grid-template-columns: minmax(300px, 1.5fr) 2fr; /* Formularz i historia */
-   /* Na mniejszych ekranach jedna kolumna */
+  grid-template-columns: minmax(300px, 1.5fr) 2fr;
   @media (max-width: 992px) {
     grid-template-columns: 1fr;
   }
 }
 .admin-grid {
-  grid-template-columns: minmax(300px, 1fr) minmax(400px, 1.5fr); /* Dwie główne kolumny dla admina */
+  grid-template-columns: minmax(300px, 1fr) minmax(400px, 1.5fr);
   @media (max-width: 1200px) {
-    grid-template-columns: 1fr; /* Jedna kolumna na mniejszych ekranach */
+    grid-template-columns: 1fr;
   }
 }
 .grid-col-main, .grid-col-soc {
@@ -248,21 +245,21 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
-  font-size: 0.875rem; /* Nieco mniejsza czcionka w tabelach */
+  font-size: 0.875rem;
 }
 th, td {
   border: 1px solid var(--border-secondary);
   padding: 8px 10px;
   text-align: left;
-  vertical-align: top; /* Lepsze dla długich wiadomości */
+  vertical-align: top;
 }
 th {
-  background-color: var(--bg-primary); /* Tło nagłówków zgodne z tłem strony */
+  background-color: var(--bg-primary);
   color: var(--text-accent);
   font-weight: 600;
 }
 tbody tr:hover {
-  background-color: rgba(0,0,0,0.03); /* Delikatne podświetlenie dla obu motywów */
+  background-color: rgba(0,0,0,0.03);
 }
 html[data-theme="dark"] tbody tr:hover {
   background-color: rgba(255,255,255,0.04);
@@ -271,23 +268,22 @@ html[data-theme="dark"] tbody tr:hover {
 /* Log Levels & Transaction Types */
 tr.log-level-INFO, tr.log-level-INFO td {
   background-color: #e8f5e9 !important;
-  color: #388e3c !important; /* zielony */
+  color: #388e3c !important;
 }
 tr.log-level-WARNING, tr.log-level-WARNING td {
   background-color: #fff3cd !important;
-  color: #b71c1c !important; /* czerwony */
+  color: #b71c1c !important;
 }
 tr.log-level-CRITICAL, tr.log-level-CRITICAL td {
   background-color: #f8d7da !important;
-  color: #7b1fa2 !important; /* bordowy/fiolet */
+  color: #7b1fa2 !important;
   font-weight: bold;
 }
 tr.incoming-tx { background-color: var(--tx-incoming-bg-row); }
 tr.outgoing-tx { background-color: var(--tx-outgoing-bg-row); }
-tr.incoming-tx td:nth-child(4) { color: var(--tx-incoming-text); font-weight: 500; } /* Amount column */
-tr.outgoing-tx td:nth-child(4) { color: var(--tx-outgoing-text); font-weight: 500; } /* Amount column */
+tr.incoming-tx td:nth-child(4) { color: var(--tx-incoming-text); font-weight: 500; }
+tr.outgoing-tx td:nth-child(4) { color: var(--tx-outgoing-text); font-weight: 500; }
 tr.incoming-tx td:nth-child(4)::before { content: "+ "; }
-
 
 /* --- Forms --- */
 form label {
@@ -314,7 +310,7 @@ form select {
 form input:focus, form select:focus {
   border-color: var(--text-accent);
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(var(--text-accent-rgb, 0,123,255),.25); /* Użyj RGB dla przezroczystości */
+  box-shadow: 0 0 0 0.2rem rgba(var(--text-accent-rgb, 0,123,255),.25);
 }
 form button[type="submit"] {
   background-color: var(--button-primary-bg);
@@ -334,10 +330,9 @@ form button[type="submit"]:hover {
 }
 .form-success-message { color: var(--text-success); background-color: var(--tx-incoming-bg-row); border-color: var(--text-success); }
 .form-error-message { color: var(--text-error); background-color: var(--tx-outgoing-bg-row); border-color: var(--text-error); }
-.dashboard-error-banner .form-error-message { /* Dla błędów na poziomie dashboardu */
+.dashboard-error-banner .form-error-message {
     margin-bottom: 15px;
 }
-
 
 /* --- Loading & Error States --- */
 .loading-container, .error-page-container {
@@ -350,7 +345,7 @@ form button[type="submit"]:hover {
   padding: 20px;
 }
 .loading-spinner {
-  border: 5px solid var(--bg-primary); /* Jaśniejszy dla kontrastu */
+  border: 5px solid var(--bg-primary);
   border-top: 5px solid var(--text-accent);
   border-radius: 50%;
   width: 40px;
@@ -360,8 +355,7 @@ form button[type="submit"]:hover {
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .loading-message { font-size: 1.1rem; color: var(--text-secondary); }
-.error-page-container .form-error-message { font-size: 1rem; } /* Większy błąd na całej stronie */
-
+.error-page-container .form-error-message { font-size: 1rem; }
 
 /* --- SOC Dashboard Specific --- */
 .soc-dashboard-container header h1 { color: var(--text-on-header); }

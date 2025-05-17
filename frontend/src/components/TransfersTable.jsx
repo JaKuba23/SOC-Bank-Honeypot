@@ -31,9 +31,9 @@ export default function TransfersTable() {
           {transfers.map((t, i) => (
             <tr key={i}>
               <td>{t.datetime}</td>
-              <td>{t.sender}</td>
-              <td>{t.recipient}</td>
-              <td>{t.amount_eur}</td>
+              <td>{t.from}</td>
+              <td>{t.to}</td>
+              <td>{t.amount}</td>
               <td>{t.ip}</td>
             </tr>
           ))}
