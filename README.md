@@ -168,19 +168,6 @@ npm start
 
 ---
 
-## 🏆 Portfolio Value
-
-- **Demonstrates:**  
-  - Threat detection, logging, and incident response skills.
-  - Modern frontend/backend architecture.
-  - Professional, readable, and visually attractive UI.
-- **Perfect for:**  
-  - SOC/Blue Team job interviews.
-  - Security training and demonstrations.
-  - Showcasing on GitHub or in your CV.
-
----
-
 ## ⏹️ Stopping the Project
 
 - To stop the backend server: `Ctrl+C` in the backend terminal.
