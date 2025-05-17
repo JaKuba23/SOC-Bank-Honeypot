@@ -23,19 +23,6 @@
 
 ---
 
-## 🏆 Why This Project Stands Out
-
-- **Portfolio-Ready:**  
-  Demonstrates practical SOC, SIEM, and Blue Team skills in a real-world scenario.
-- **Professional Codebase:**  
-  Modular, well-documented, and easy to extend for interviews or further development.
-- **Recruiter-Friendly:**  
-  Clear separation of user and admin roles, live dashboards, and visually appealing tables make it easy to showcase during interviews or on GitHub.
-- **Educational Value:**  
-  Ideal for learning and demonstrating detection, logging, and incident response workflows.
-
----
-
 ## 👁️ Architecture Overview
 
 ```mermaid
