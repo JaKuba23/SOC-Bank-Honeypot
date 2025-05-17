@@ -90,7 +90,7 @@ venv\Scripts\activate
 source venv/bin/activate
 
 pip install -r requirements.txt
-python api/transfer.py
+python -m api.transfer
 # The backend will be running on http://localhost:5000
 ```
 
