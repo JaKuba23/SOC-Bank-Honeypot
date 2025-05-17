@@ -21,7 +21,6 @@ export default function Login() {
       try {
         data = await res.json();
       } catch {
-        // jeśli backend nie odpowiada JSONem
         setError("Cannot connect to server. Please try again later.");
         return;
       }
@@ -41,9 +40,6 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <button className="theme-switcher" onClick={toggleTheme}>
-        {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-      </button>
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
           <h2>Bank Login</h2>
@@ -62,9 +58,15 @@ export default function Login() {
             onChange={e => setPassword(e.target.value)}
             required
           />
-          <button type="submit">Login</button>
+          <button type="submit" className="login-btn">Login</button>
           {error && <div className="error-msg">{error}</div>}
         </form>
+        <button
+          className="theme-switcher login-theme-switcher"
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        </button>
       </div>
     </div>
   );

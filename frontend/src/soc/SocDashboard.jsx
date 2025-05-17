@@ -1,13 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LiveLogsTable, SuspiciousTable, TransfersTable } from '../components';
-import ThemeSwitcher from '../components/ThemeSwitcher';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function SocDashboard() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef(null);
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -52,7 +53,7 @@ export default function SocDashboard() {
     }
   };
 
-  const handleToggle = () => {
+  const handleRunTests = () => {
     if (running) {
       clearInterval(intervalRef.current);
       setRunning(false);
@@ -70,19 +71,30 @@ export default function SocDashboard() {
   return (
     <div className="soc-dashboard-container">
       <header>
-        <div className="header-left">
-          <h1>SOC Monitoring Panel</h1>
-        </div>
+        <h1>SOC Monitoring Panel</h1>
         <div className="header-right">
-          <ThemeSwitcher />
           <button
-            className={`test-transfers-btn ${loading ? 'disabled' : ''}`}
-            onClick={handleToggle}
+            className="theme-switcher run-tests-btn"
+            style={{ minWidth: 140, height: 48, fontWeight: 600 }}
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          </button>
+          <button
+            className="run-tests-btn"
+            onClick={handleRunTests}
             disabled={loading}
+            style={{ minWidth: 140, height: 48, fontWeight: 600, opacity: loading ? 0.7 : 1 }}
           >
             {running ? 'Stop Test Events' : 'Run Test Events'}
           </button>
-          <button className="logout-button" onClick={handleLogout}>Logout</button>
+          <button
+            className="logout-button"
+            style={{ minWidth: 110, height: 48, fontWeight: 600 }}
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
         </div>
       </header>
       <main>
