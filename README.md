@@ -20,7 +20,6 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 
 ## Architecture
 
-```
 +--------+        +---------------------+        +---------------------+
 |  User  |<-----> | Frontend (HTML/JS)  |<-----> | Flask Backend (API) |
 +--------+        +---------------------+        +---------------------+
@@ -44,7 +43,6 @@ A Python-based honeypot and security monitoring project that simulates a secure 
                                             +--------------------------+
                                             | SIEM/SOC Tools           |
                                             +--------------------------+
-```
 
 ---
 
@@ -61,6 +59,7 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 ## Usage
 
 1. **Create and activate a virtual environment:**
+
    ```bash
    python -m venv venv
    .\venv\Scripts\activate
@@ -68,9 +67,11 @@ A Python-based honeypot and security monitoring project that simulates a secure 
    ```
 
 2. **Start the entire project with one command:**
+
    ```bash
    python run_all.py
    ```
+
    This will:
    - Start the backend (API) on port 5000
    - Start the SOC dashboard on port 5001
@@ -89,6 +90,7 @@ A Python-based honeypot and security monitoring project that simulates a secure 
    - Or open `app/frontend/soc_dashboard.html` in your browser
 
 5. **Run automated tests (optional, in a separate terminal):**
+
    ```bash
    pytest tests/
    ```
@@ -104,9 +106,10 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 
 ## Example Log Entry
 
-```
+---
 2025-05-17 12:34:56,789 - WARNING - Suspicious input detected: Invalid amount from 127.0.0.1: '1; DROP TABLE users'
 2025-05-17 12:35:10,123 - WARNING - Phishing attempt from 127.0.0.1: Multiple invalid attempts: <script>alert(1)</script>
+
 ```
 
 ---
@@ -114,6 +117,7 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 ## Portfolio & SOC Value
 
 This project demonstrates:
+
 - Threat detection and logging
 - Honeypot techniques
 - Integration with security monitoring tools

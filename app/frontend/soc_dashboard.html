@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>SOC Dashboard - Honeypot</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="soc_dashboard.css">
     <style>
         table { width: 100%; border-collapse: collapse; margin-top: 20px;}
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left;}
@@ -44,7 +44,7 @@
             const ip = document.getElementById('filterIp').value;
             const keyword = document.getElementById('filterKeyword').value;
             const level = document.getElementById('filterLevel').value;
-            let url = `http://127.0.0.1:5000/api/logs?`;
+            let url = `http://localhost:5000/api/logs?`;
             if(ip) url += `ip=${ip}&`;
             if(keyword) url += `keyword=${keyword}&`;
             if(level) url += `level=${level}&`;
@@ -64,7 +64,7 @@
             });
         }
         async function runTestTransfers() {
-            const res = await fetch('http://127.0.0.1:5000/api/test-transfers', {method: 'POST'});
+            const res = await fetch('http://localhost:5000/api/test-transfers', {method: 'POST'});
             const data = await res.json();
             document.getElementById('testResults').textContent = "Test transfers: " + JSON.stringify(data.results, null, 2);
             loadLogs();

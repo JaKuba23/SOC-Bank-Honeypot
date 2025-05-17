@@ -8,8 +8,12 @@ from api.users_db import USERS, get_user_by_username, get_user_by_account, verif
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",   # kluczowe!
+    SESSION_COOKIE_SECURE=False       # kluczowe dla localhost!
+)
+from flask_cors import CORS
 CORS(app, supports_credentials=True)
-detector = PhishingDetector()
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -80,10 +84,6 @@ def api_transfer():
 
     try:
         rate = fetch_exchange_rate()
-        pln = convert_eur_to_pln(eur, rate)
-        sender_user["balance"] -= eur
-        recipient_user["balance"] += eur
-        HoneypotLogger.log_suspicious(f"Transfer: {eur} EUR {sender_user['fullname']} -> {recipient_user['fullname']} ({pln} PLN) from {ip}")
         return jsonify({"pln": pln, "rate_used": rate, "new_balance": sender_user["balance"]})
     except Exception as e:
         HoneypotLogger.log_suspicious(f"Exchange rate fetch error from {ip}: {str(e)}")

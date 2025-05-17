@@ -1,5 +1,5 @@
 async function fetchMe() {
-    const res = await fetch('http://127.0.0.1:5000/api/me', {credentials: 'include'});
+    const res = await fetch('http://localhost:5000/api/me', {credentials: 'include'});
     if (res.status !== 200) {
         window.location.href = "login.html";
         return;
@@ -13,7 +13,7 @@ async function fetchMe() {
 }
 
 async function fetchRecipients() {
-    const res = await fetch('http://127.0.0.1:5000/api/users', {credentials: 'include'});
+    const res = await fetch('http://localhost:5000/api/users', {credentials: 'include'});
     const users = await res.json();
     const select = document.getElementById('recipient');
     select.innerHTML = '';
@@ -26,7 +26,7 @@ async function fetchRecipients() {
 }
 
 document.getElementById('logoutBtn').onclick = async function() {
-    await fetch('http://127.0.0.1:5000/api/logout', {method: 'POST', credentials: 'include'});
+    await fetch('http://localhost:5000/api/logout', {method: 'POST', credentials: 'include'});
     window.location.href = "login.html";
 };
 
@@ -40,7 +40,7 @@ document.getElementById('transferForm').onsubmit = async function(e) {
     document.getElementById('errorSection').style.display = 'none';
     const recipient_account = document.getElementById('recipient').value;
     const amount = document.getElementById('amount').value;
-    const res = await fetch('http://127.0.0.1:5000/api/transfer', {
+    const res = await fetch('http://localhost:5000/api/transfer', {
         method: 'POST',
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},

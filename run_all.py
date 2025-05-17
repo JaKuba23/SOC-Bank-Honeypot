@@ -26,7 +26,8 @@ if __name__ == "__main__":
     time.sleep(2)
     print("Opening browser windows...")
     webbrowser.open_new("http://localhost:8080/login.html")
-    webbrowser.open_new("http://127.0.0.1:5001/dashboard")
+    # Otwieraj dashboard frontendowy, nie backendowy!
+    webbrowser.open_new("http://localhost:8080/soc_dashboard.html")
 
     print("All services started. Press Ctrl+C to stop.")
     try:
@@ -41,3 +42,4 @@ if __name__ == "__main__":
             if proc.poll() is None:
                 proc.terminate()
         print("All services stopped.")
+        sys.exit(0)
