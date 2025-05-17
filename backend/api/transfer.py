@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 app.config.update(
     SESSION_COOKIE_SAMESITE="None",
-    SESSION_COOKIE_SECURE=False  # True tylko na HTTPS!
+    SESSION_COOKIE_SECURE=False
 )
 app.permanent_session_lifetime = timedelta(hours=1)
 CORS(app, supports_credentials=True)
@@ -42,7 +42,7 @@ def logout():
 def me():
     username = session.get("username")
     if not username:
-        return jsonify({"logged_in": False, "error": "Session expired"}), 401
+        return jsonify({"logged_in": False}), 401
     user = get_user_by_username(username)
     return jsonify({"logged_in": True, "fullname": user["fullname"], "account": user["account"], "balance": user["balance"]})
 
@@ -92,30 +92,38 @@ def api_transfer():
         pln = convert_eur_to_pln(eur, rate)
         sender_user["balance"] -= eur
         recipient_user["balance"] += eur
+        HoneypotLogger.log_transfer(ip, sender_user["fullname"], recipient_user["fullname"], eur)
         return jsonify({"pln": round(pln, 2), "rate_used": rate, "new_balance": sender_user["balance"]})
     except Exception as e:
         HoneypotLogger.log_suspicious(f"Exchange rate fetch error from {ip}: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-def random_public_ip():
-    first = random.choice([i for i in range(11, 223) if i not in (10, 127, 192, 172)])
-    return f"{first}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}"
+@app.route('/api/live-transfers', methods=['GET'])
+def live_transfers():
+    # Zwraca ostatnie 20 przelewów (do tabeli live)
+    return jsonify(HoneypotLogger.get_last_transfers(20))
+
+@app.route('/api/logs', methods=['GET'])
+def logs():
+    # Zwraca ostatnie 100 logów (do tabeli live)
+    return jsonify(HoneypotLogger.get_last_logs(100))
 
 @app.route('/api/test-transfers', methods=['POST'])
 def test_transfers():
+    # Generuje losowe przelewy i logi, symuluje ataki
     results = []
     for _ in range(10):
         sender = random.choice(USERS)
         recipient = random.choice([u for u in USERS if u != sender])
         amount = round(random.uniform(1, min(sender["balance"], 500)), 2)
-        ip = random_public_ip()
+        ip = f"192.168.{random.randint(1,254)}.{random.randint(1,254)}"
         if random.random() < 0.3:
             msg = f"phishing attempt detected: {amount} EUR {sender['fullname']} -> {recipient['fullname']}"
             HoneypotLogger.log_phishing_attempt(ip, msg)
             level = "WARNING"
         else:
             msg = f"Test transfer: {amount} EUR {sender['fullname']} -> {recipient['fullname']}"
-            HoneypotLogger.log_suspicious(f"{msg} [IP: {ip}]")
+            HoneypotLogger.log_transfer(ip, sender['fullname'], recipient['fullname'], amount)
             level = "INFO"
         if sender["balance"] >= amount:
             sender["balance"] -= amount
@@ -131,4 +139,4 @@ def test_transfers():
     return jsonify({"success": True, "results": results})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False)
