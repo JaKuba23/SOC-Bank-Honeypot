@@ -1,7 +1,65 @@
+# Symulacja bazy danych użytkowników
 USERS = [
-    {"username": "admin", "fullname": "Admin", "password": "admin", "account": "11111111", "balance": 10000},
-    {"username": "William", "fullname": "William Smith", "password": "tajnehaslo", "account": "22222222", "balance": 5000},
-    {"username": "Emma", "fullname": "Emma Johnson", "password": "qwerty", "account": "33333333", "balance": 3000},
+    {
+        "id": 1,
+        "username": "admin",
+        "fullname": "Admin User",
+        "password_hash": "admin", # W rzeczywistości użyj hashowania!
+        "account": "ACC00000001",
+        "balance": 10000000.00,  # Bardzo wysokie saldo dla admina do manualnych operacji
+        "history": [],
+        "role": "admin"
+    },
+    {
+        "id": 2,
+        "username": "William",
+        "fullname": "William Smith",
+        "password_hash": "tajnehaslo",
+        "account": "ACC00000002",
+        "balance": 7500.00,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 3,
+        "username": "Emma",
+        "fullname": "Emma Johnson",
+        "password_hash": "qwerty",
+        "account": "ACC00000003",
+        "balance": 3200.00,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 4,
+        "username": "Olivia",
+        "fullname": "Olivia Brown",
+        "password_hash": "olivia123",
+        "account": "ACC00000004",
+        "balance": 15000.00,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 5,
+        "username": "James",
+        "fullname": "James Davis",
+        "password_hash": "jamespass",
+        "account": "ACC00000005",
+        "balance": 800.50,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 6,
+        "username": "Sophia",
+        "fullname": "Sophia Wilson",
+        "password_hash": "sophiaSecure",
+        "account": "ACC00000006",
+        "balance": 2100.75,
+        "history": [],
+        "role": "user"
+    }
 ]
 
 def get_user_by_username(username):
@@ -16,5 +74,16 @@ def get_user_by_account(account):
             return u
     return None
 
-def verify_password(user, password):
-    return user["password"] == password
+def verify_password(stored_password_hash, provided_password):
+    # W rzeczywistej aplikacji użyj bezpiecznych metod porównywania hashy
+    return stored_password_hash == provided_password
+
+def update_user_transaction(user_id, amount_change, transaction_details):
+    user = next((u for u in USERS if u['id'] == user_id), None)
+    if user:
+        user['balance'] = round(user['balance'] + amount_change, 2) # Zaokrąglenie do 2 miejsc po przecinku
+        user.setdefault('history', []).insert(0, transaction_details) # Dodaj na początek listy (najnowsze pierwsze)
+        # Ograniczenie historii do np. ostatnich 50 transakcji
+        user['history'] = user['history'][:50]
+        return True
+    return False

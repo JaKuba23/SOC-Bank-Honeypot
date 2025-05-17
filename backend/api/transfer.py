@@ -1,142 +1,94 @@
-from flask import Flask, request, jsonify, session
-from flask_cors import CORS
-from api.fetcher import fetch_exchange_rate
-from api.utils import convert_eur_to_pln
+# Typowe importy, które mogą powodować problemy:
+from api.fetcher import fetch_exchange_rate  # Czy plik api/fetcher.py istnieje?
+from api.utils import convert_eur_to_pln     # Czy plik api/utils.py istnieje?
 from api.honeypot_logger import HoneypotLogger
 from api.phishing_detector import PhishingDetector
-from api.users_db import USERS, get_user_by_username, get_user_by_account, verify_password
-import random
-from datetime import timedelta
+# Symulacja bazy danych użytkowników
+USERS = [
+    {
+        "id": 1,
+        "username": "admin",
+        "fullname": "Admin User",
+        "password_hash": "admin", # W rzeczywistości użyj hashowania!
+        "account": "ACC00000001",
+        "balance": 10000000.00,  # Bardzo wysokie saldo dla admina do manualnych operacji
+        "history": [],
+        "role": "admin"
+    },
+    {
+        "id": 2,
+        "username": "William",
+        "fullname": "William Smith",
+        "password_hash": "tajnehaslo",
+        "account": "ACC00000002",
+        "balance": 7500.00,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 3,
+        "username": "Emma",
+        "fullname": "Emma Johnson",
+        "password_hash": "qwerty",
+        "account": "ACC00000003",
+        "balance": 3200.00,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 4,
+        "username": "Olivia",
+        "fullname": "Olivia Brown",
+        "password_hash": "olivia123",
+        "account": "ACC00000004",
+        "balance": 15000.00,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 5,
+        "username": "James",
+        "fullname": "James Davis",
+        "password_hash": "jamespass",
+        "account": "ACC00000005",
+        "balance": 800.50,
+        "history": [],
+        "role": "user"
+    },
+    {
+        "id": 6,
+        "username": "Sophia",
+        "fullname": "Sophia Wilson",
+        "password_hash": "sophiaSecure",
+        "account": "ACC00000006",
+        "balance": 2100.75,
+        "history": [],
+        "role": "user"
+    }
+]
 
-app = Flask(__name__)
-app.secret_key = "supersecretkey"
-app.config.update(
-    SESSION_COOKIE_SAMESITE="None",
-    SESSION_COOKIE_SECURE=False
-)
-app.permanent_session_lifetime = timedelta(hours=1)
-CORS(app, supports_credentials=True)
+def get_user_by_username(username):
+    for u in USERS:
+        if u["username"] == username:
+            return u
+    return None
 
-detector = PhishingDetector()
+def get_user_by_account(account):
+    for u in USERS:
+        if u["account"] == account:
+            return u
+    return None
 
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
-    user = get_user_by_username(username)
-    if user and verify_password(user, password):
-        session.permanent = True
-        session["username"] = username
-        return jsonify({"success": True, "fullname": user["fullname"], "account": user["account"], "balance": user["balance"]})
-    else:
-        HoneypotLogger.log_suspicious(f"Failed login attempt for user: {username}")
-        return jsonify({"success": False, "error": "Invalid credentials"}), 401
+def verify_password(stored_password_hash, provided_password):
+    # W rzeczywistej aplikacji użyj bezpiecznych metod porównywania hashy
+    return stored_password_hash == provided_password
 
-@app.route('/api/logout', methods=['POST'])
-def logout():
-    session.pop("username", None)
-    return jsonify({"success": True})
-
-@app.route('/api/me', methods=['GET'])
-def me():
-    username = session.get("username")
-    if not username:
-        return jsonify({"logged_in": False}), 401
-    user = get_user_by_username(username)
-    return jsonify({"logged_in": True, "fullname": user["fullname"], "account": user["account"], "balance": user["balance"]})
-
-@app.route('/api/users', methods=['GET'])
-def users():
-    username = session.get("username")
-    if not username:
-        return jsonify({"error": "Not logged in"}), 401
-    return jsonify([
-        {"fullname": u["fullname"], "account": u["account"]}
-        for u in USERS if u["username"] != username
-    ])
-
-@app.route('/api/transfer', methods=['POST'])
-def api_transfer():
-    username = session.get("username")
-    if not username:
-        return jsonify({"error": "Not logged in"}), 401
-
-    data = request.get_json()
-    ip = request.remote_addr
-
-    sender_user = get_user_by_username(username)
-    recipient_account = data.get('recipient_account')
-    amount_str = data.get('amount')
-
-    recipient_user = get_user_by_account(recipient_account)
-    if not recipient_user or recipient_user["username"] == username:
-        HoneypotLogger.log_suspicious(f"Invalid recipient from {ip}: {recipient_account}")
-        return jsonify({"error": "Invalid recipient account."}), 400
-
-    try:
-        eur = float(amount_str)
-        if eur <= 0:
-            raise ValueError("Non-positive amount")
-        if sender_user["balance"] < eur:
-            return jsonify({"error": "Insufficient funds."}), 400
-    except Exception:
-        detector.record_attempt(ip)
-        HoneypotLogger.log_suspicious(f"Invalid amount from {ip}: {amount_str}")
-        if detector.is_suspicious(ip):
-            HoneypotLogger.log_phishing_attempt(ip, f"Multiple invalid attempts: {amount_str}")
-        return jsonify({"error": "Invalid amount."}), 400
-
-    try:
-        rate = fetch_exchange_rate()
-        pln = convert_eur_to_pln(eur, rate)
-        sender_user["balance"] -= eur
-        recipient_user["balance"] += eur
-        HoneypotLogger.log_transfer(ip, sender_user["fullname"], recipient_user["fullname"], eur)
-        return jsonify({"pln": round(pln, 2), "rate_used": rate, "new_balance": sender_user["balance"]})
-    except Exception as e:
-        HoneypotLogger.log_suspicious(f"Exchange rate fetch error from {ip}: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
-
-@app.route('/api/live-transfers', methods=['GET'])
-def live_transfers():
-    # Zwraca ostatnie 20 przelewów (do tabeli live)
-    return jsonify(HoneypotLogger.get_last_transfers(20))
-
-@app.route('/api/logs', methods=['GET'])
-def logs():
-    # Zwraca ostatnie 100 logów (do tabeli live)
-    return jsonify(HoneypotLogger.get_last_logs(100))
-
-@app.route('/api/test-transfers', methods=['POST'])
-def test_transfers():
-    # Generuje losowe przelewy i logi, symuluje ataki
-    results = []
-    for _ in range(10):
-        sender = random.choice(USERS)
-        recipient = random.choice([u for u in USERS if u != sender])
-        amount = round(random.uniform(1, min(sender["balance"], 500)), 2)
-        ip = f"192.168.{random.randint(1,254)}.{random.randint(1,254)}"
-        if random.random() < 0.3:
-            msg = f"phishing attempt detected: {amount} EUR {sender['fullname']} -> {recipient['fullname']}"
-            HoneypotLogger.log_phishing_attempt(ip, msg)
-            level = "WARNING"
-        else:
-            msg = f"Test transfer: {amount} EUR {sender['fullname']} -> {recipient['fullname']}"
-            HoneypotLogger.log_transfer(ip, sender['fullname'], recipient['fullname'], amount)
-            level = "INFO"
-        if sender["balance"] >= amount:
-            sender["balance"] -= amount
-            recipient["balance"] += amount
-        results.append({
-            "from": sender["fullname"],
-            "to": recipient["fullname"],
-            "amount": amount,
-            "ip": ip,
-            "level": level,
-            "msg": msg
-        })
-    return jsonify({"success": True, "results": results})
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000, use_reloader=False)
+def update_user_transaction(user_id, amount_change, transaction_details):
+    user = next((u for u in USERS if u['id'] == user_id), None)
+    if user:
+        user['balance'] = round(user['balance'] + amount_change, 2) # Zaokrąglenie do 2 miejsc po przecinku
+        user.setdefault('history', []).insert(0, transaction_details) # Dodaj na początek listy (najnowsze pierwsze)
+        # Ograniczenie historii do np. ostatnich 50 transakcji
+        user['history'] = user['history'][:50]
+        return True
+    return False
