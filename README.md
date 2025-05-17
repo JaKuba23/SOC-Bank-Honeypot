@@ -20,10 +20,6 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 
 ## Architecture
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/github/explore/main/topics/soc/soc.png" width="120" align="right" alt="SOC" />
-</p>
-
 ```
 +--------+        +---------------------+        +---------------------+
 |  User  |<-----> | Frontend (HTML/JS)  |<-----> | Flask Backend (API) |
