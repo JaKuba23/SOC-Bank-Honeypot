@@ -1,0 +1,75 @@
+.soc-dashboard-container {
+  padding: 20px;
+  background-color: #f0f2f5; /* Jasne tło dla całego panelu */
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.soc-dashboard-container header {
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #005f73; /* Ciemniejszy, profesjonalny kolor */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.soc-dashboard-container header h1 {
+  color: #005f73;
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.soc-dashboard-container header p {
+  color: #333;
+  margin-top: 5px;
+  font-size: 1.1rem;
+}
+
+.dashboard-section {
+  margin-bottom: 30px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.dashboard-section h2 {
+  color: #005f73; /* Spójny kolor nagłówków sekcji */
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 10px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+/* Możesz dodać więcej specyficznych stylów dla tabel lub innych elementów w panelu SOC */
+.soc-dashboard-container .panel table { /* Przykładowe nadpisanie stylów tabeli, jeśli .panel jest używany */
+  border: 1px solid #dee2e6;
+}
+
+.soc-dashboard-container .panel th {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.soc-dashboard-container footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ccc;
+  text-align: center;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* Klasa loading, jeśli zdecydujesz się na stan ładowania */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  font-size: 1.5rem;
+  color: #005f73;
+}
