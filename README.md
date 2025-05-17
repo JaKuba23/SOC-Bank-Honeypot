@@ -44,6 +44,7 @@ A Python-based honeypot and security monitoring project that simulates a secure 
                                             | SIEM/SOC Tools           |
                                             +--------------------------+
 
+
 ---
 
 ## Security & SOC Integration
@@ -106,10 +107,9 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 
 ## Example Log Entry
 
----
+```
 2025-05-17 12:34:56,789 - WARNING - Suspicious input detected: Invalid amount from 127.0.0.1: '1; DROP TABLE users'
 2025-05-17 12:35:10,123 - WARNING - Phishing attempt from 127.0.0.1: Multiple invalid attempts: <script>alert(1)</script>
-
 ```
 
 ---
