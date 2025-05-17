@@ -1,15 +1,12 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Navigate } from "react-router-dom"; // <--- DODAJ TEN IMPORT
-import {
-  TransfersTable,
-  LiveLogsTable,
-  SuspiciousTable,
-  FriendsList,
-  TransferForm,
-  HistoryTable,
-  Loading,
-  Error
-} from "./index";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Navigate } from 'react-router-dom';
+import TransferForm from './TransferForm';
+import HistoryTable from './HistoryTable';
+import TransfersTable from './TransfersTable';
+import SuspiciousTable from './SuspiciousTable';
+import LiveLogsTable from './LiveLogsTable';
+import Loading from './Loading';
+import Error from './Error';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -19,34 +16,35 @@ export default function Dashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchUserData = useCallback(() => {
-    setLoading(true); // Ustaw loading na true przed fetchem
-    fetch("http://localhost:5000/api/me", { credentials: "include" })
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 401) {
-            // Nie przekierowuj tutaj bezpośrednio, pozwól komponentowi Navigate to zrobić
-            // window.location.href = "/login";
-            setUser(null); // Wyczyść użytkownika, aby Navigate zadziałało
-          }
-          throw new Error(`HTTP error! status: ${res.status}`);
+  setLoading(true);
+  fetch("http://localhost:5000/api/me", { credentials: "include" })
+    .then(res => {
+      if (!res.ok) {
+        if (res.status === 401) {
+          setUser(null);
+          throw new Error(`Not authenticated: ${res.status}`);
         }
-        return res.json();
-      })
-      .then(data => {
-        if (data.logged_in) {
-          setUser(data);
-          setError(""); // Wyczyść błędy po sukcesie
-        } else {
-          setUser(null); // Wyczyść użytkownika, aby Navigate zadziałało
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch user data:", err);
-        setError("Failed to load user data. You might be redirected to login.");
-        setUser(null); // Wyczyść użytkownika w razie błędu
-      })
-      .finally(() => setLoading(false));
-  }, []);
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log("User data received:", data); // Dodaj log do konsoli
+      if (data.logged_in) {
+        setUser(data);
+        setError("");
+      } else {
+        console.error("Server returned logged_in=false");
+        setUser(null);
+      }
+    })
+    .catch(err => {
+      console.error("Failed to fetch user data:", err);
+      setError("Failed to load user data. You might be redirected to login.");
+      setUser(null);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   useEffect(() => {
     fetchUserData();
@@ -90,7 +88,6 @@ export default function Dashboard() {
         <div className="dashboard-grid">
           <div className="grid-col-1">
             <TransferForm onTransfer={handleTransferSuccess} selectedAccount={selectedAccount} />
-            <FriendsList onSelect={setSelectedAccount} />
             <HistoryTable key={`history-${refreshTrigger}`} />
           </div>
           <div className="grid-col-2">

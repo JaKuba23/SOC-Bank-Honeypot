@@ -9,9 +9,12 @@ import webbrowser
 # --- Configuration ---
 BACKEND_DIR = "backend"
 FRONTEND_DIR = "frontend"
-# Run backend as a module, assuming transfer.py is in backend/api/
-# and backend/api/ is a package (contains __init__.py)
-BACKEND_CMD = ["python", "-m", "api.transfer"]
+
+# ZMIENIONE: Uruchamiamy backend w inny sposób, dodając katalog nadrzędny do PYTHONPATH
+if platform.system() == "Windows":
+    BACKEND_CMD = ["cmd", "/c", "set", "PYTHONPATH=%PYTHONPATH%;.", "&&", "python", "-m", "api.transfer"]
+else:
+    BACKEND_CMD = ["bash", "-c", "PYTHONPATH=$PYTHONPATH:. python -m api.transfer"]
 
 # Default frontend URL - will be opened in browser if auto_open_browser is True
 FRONTEND_URL = "http://localhost:3000"
@@ -36,12 +39,45 @@ def start_servers():
         if platform.system() == "Windows":
             creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
         
+        # Redirect output so we can see errors
         backend_process = subprocess.Popen(
             BACKEND_CMD,
             cwd=BACKEND_DIR,
-            creationflags=creation_flags
+            creationflags=creation_flags,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+            universal_newlines=True
         )
+        
+        # Check if process started or immediately failed
+        time.sleep(0.5)
+        if backend_process.poll() is not None:  # Process already exited
+            stdout, stderr = backend_process.communicate()
+            print(f"ERROR: Backend server failed to start!")
+            if stdout: print(f"Output: {stdout}")
+            if stderr: print(f"Error: {stderr}")
+            return False
+            
         print(f"Backend server started (PID: {backend_process.pid}).")
+        
+        # Start a thread to read and print backend output
+        def read_output(process, name):
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(f"[{name}]: {output.strip()}")
+            
+            # Read any remaining stderr
+            for line in process.stderr:
+                print(f"[{name} ERROR]: {line.strip()}")
+                
+        import threading
+        threading.Thread(target=read_output, args=(backend_process, "Backend"), daemon=True).start()
+        
     except FileNotFoundError:
         print(f"ERROR: Python interpreter or backend command not found. Make sure Python is in PATH and the path/command is correct: CWD='{BACKEND_DIR}', CMD='{' '.join(BACKEND_CMD)}'.")
         return False
@@ -50,7 +86,7 @@ def start_servers():
         return False
 
     # Short pause to allow backend logs to appear before frontend starts
-    time.sleep(2) 
+    time.sleep(3)  # Increased wait time
 
     print("\nStarting Frontend server...")
     try:
@@ -73,16 +109,16 @@ def start_servers():
                 webbrowser.open(FRONTEND_URL)
             
             import threading
-            threading.Thread(target=open_browser).start()
+            threading.Thread(target=open_browser, daemon=True).start()
     except FileNotFoundError:
         print(f"ERROR: 'npm' command not found. Make sure Node.js (with npm) is installed and 'npm' is in your PATH.")
-        if backend_process: 
+        if backend_process and backend_process.poll() is None: 
             _kill_process_tree(backend_process, "Backend")
             backend_process = None 
         return False
     except Exception as e:
         print(f"ERROR starting Frontend server: {e}")
-        if backend_process:
+        if backend_process and backend_process.poll() is None:
             _kill_process_tree(backend_process, "Backend")
             backend_process = None
         return False
@@ -196,6 +232,17 @@ if __name__ == "__main__":
     print("NOTE: Closing this window or pressing Ctrl+C will stop both servers.")
     print("-" * 57)
 
+    # Check if required files exist
+    if not os.path.exists(os.path.join(BACKEND_DIR, "api", "transfer.py")):
+        print(f"ERROR: Backend file not found: {os.path.join(BACKEND_DIR, 'api', 'transfer.py')}")
+        print("Please make sure your project structure is correct.")
+        sys.exit(1)
+        
+    if not os.path.exists(os.path.join(FRONTEND_DIR, "package.json")):
+        print(f"ERROR: Frontend package.json not found: {os.path.join(FRONTEND_DIR, 'package.json')}")
+        print("Please make sure your project structure is correct.")
+        sys.exit(1)
+
     signal.signal(signal.SIGINT, graceful_signal_handler)
     if platform.system() != "Windows":
         signal.signal(signal.SIGTERM, graceful_signal_handler)
@@ -215,8 +262,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print("\nCtrl+C detected (KeyboardInterrupt in main loop).")
-        # The SIGINT signal handler (graceful_signal_handler) should have already been called
-        # and initiated stop_servers(). The finally block below will also ensure this.
     finally:
         print("\n'finally' block: Starting server shutdown procedures (if active)...")
         stop_servers()

@@ -1,8 +1,4 @@
-# Typowe importy, które mogą powodować problemy:
-from api.fetcher import fetch_exchange_rate  # Czy plik api/fetcher.py istnieje?
-from api.utils import convert_eur_to_pln     # Czy plik api/utils.py istnieje?
-from api.honeypot_logger import HoneypotLogger
-from api.phishing_detector import PhishingDetector
+
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from api.fetcher import fetch_exchange_rate
@@ -55,11 +51,10 @@ def login():
         HoneypotLogger.log_info(f"User '{username}' logged in successfully.", request.remote_addr)
         app.logger.info(f"User '{username}' logged in successfully. Role: {session['role']}")
         return jsonify({
-            "logged_in": True,
-            "message": "Login successful",
-            # Zwracamy tylko niezbędne dane, reszta przez /api/me
-            "user": {"username": user["username"], "fullname": user["fullname"], "role": user.get("role", "user")}
-        }), 200
+        "logged_in": True,  # Backend zwraca "logged_in" zamiast "success"
+        "message": "Login successful",
+        "user": {"username": user["username"], "fullname": user["fullname"], "role": user.get("role", "user")}
+    }), 200
     else:
         detector.failed_login_attempt(request.remote_addr, username)
         log_msg = f"Failed login attempt for user '{username}'."
