@@ -10,6 +10,7 @@ import random
 from datetime import datetime, timedelta
 import logging
 import requests
+from flask_cors import cross_origin
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 app = Flask(__name__)
@@ -22,10 +23,7 @@ app.config.update(
 )
 app.permanent_session_lifetime = timedelta(hours=1) # Czas trwania sesji
 
-CORS(app,
-     supports_credentials=True,
-     origins=["http://localhost:3000"] # Zezwalaj tylko na frontend
-)
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 detector = PhishingDetector()
 
 # --- Endpointy API (login, logout, me, users, transfer - jak poprzednio, ale z drobnymi usprawnieniami) ---
@@ -113,8 +111,9 @@ def users_list_api(): # Zmieniona nazwa funkcji
     ]
     return jsonify(user_list_data)
 
-@app.route('/api/transfer', methods=['POST'])
-def api_transfer():
+@app.route('/api/test-transfers', methods=['POST'])
+@cross_origin(origins=["http://localhost:3000"], supports_credentials=True)
+def test_transfers():
     if 'user_id' not in session:
         HoneypotLogger.log_suspicious("Unauthorized transfer attempt (no session).", request.remote_addr)
         return jsonify({"error": "Not logged in"}), 401
@@ -223,8 +222,8 @@ def logs():
     # Dostępne dla admina (frontend powinien to kontrolować)
     return jsonify(HoneypotLogger.get_last_logs(100))
 
-@app.route('/api/test-transfers', methods=['POST'])
-def test_transfers():
+@app.route('/api/simulate-transfers', methods=['POST'])
+def simulate_transfers():
     results = []
     num_operations = random.randint(1, 2)
     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

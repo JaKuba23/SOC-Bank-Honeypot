@@ -21,11 +21,15 @@ export default function TransferForm({ onTransfer, selectedAccount }) {
     e.preventDefault();
     setResult("");
     setError("");
+    if (!recipient || !amount) {
+      setError("Recipient account and amount are required");
+      return;
+    }
     const res = await fetch("http://localhost:5000/api/transfer", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ recipient_account: recipient, amount }),
+      body: JSON.stringify({ recipient_account: recipient, amount_eur: amount }),
     });
     const data = await res.json();
     if (res.ok && data.new_balance !== undefined) {
@@ -38,35 +42,32 @@ export default function TransferForm({ onTransfer, selectedAccount }) {
   }
 
   return (
-    <section className="panel">
-      <h2>Make a Transfer</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Recipient:
-          <select value={recipient} onChange={e => setRecipient(e.target.value)} required>
-            <option value="">-- Select --</option>
-            {users.map(u => (
-              <option key={u.account} value={u.account}>
-                {u.fullname} ({u.account})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Amount [EUR]:
-          <input
-            type="number"
-            min="1"
-            step="0.01"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            required
-          />
-        </label>
-        <button type="submit">Transfer</button>
-      </form>
+    <form onSubmit={handleSubmit}>
+      <label>
+        Recipient:
+        <select value={recipient} onChange={e => setRecipient(e.target.value)} required>
+          <option value="">-- Select --</option>
+          {users.map(u => (
+            <option key={u.account} value={u.account}>
+              {u.fullname} ({u.account})
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Amount [EUR]:
+        <input
+          type="number"
+          min="1"
+          step="0.01"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+          required
+        />
+      </label>
+      <button type="submit">Transfer</button>
       {result && <div style={{ color: "green", marginTop: 8 }}>{result}</div>}
       {error && <div style={{ color: "red", marginTop: 8 }}>{error}</div>}
-    </section>
+    </form>
   );
 }

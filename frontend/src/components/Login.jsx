@@ -6,21 +6,25 @@ export default function Login() {
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
-  e.preventDefault();
-  setError("");
-  const res = await fetch("http://localhost:5000/api/login", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-  const data = await res.json();
-  if (res.ok && data.logged_in) {  // ZMIENIONO: success → logged_in
-    window.location.href = "/dashboard";
-  } else {
-    setError(data.error || "Login failed");
+    e.preventDefault();
+    setError("");
+    const res = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (res.ok && data.logged_in) {
+      if (data.user && data.user.role === "admin") {
+        window.location.href = "/soc-dashboard";
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } else {
+      setError(data.error || "Login failed");
+    }
   }
-}
 
   return (
     <div className="login-container">

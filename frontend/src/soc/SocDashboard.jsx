@@ -9,27 +9,28 @@ export default function SocDashboard() {
   
   // Run test transfers function - for dashboard controls
   const runTestTransfers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:5000/api/test-transfers', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Test transfers executed:', data);
-      // Tabele odświeżą się automatycznie
-    } catch (err) {
-      console.error('Failed to execute test transfers:', err);
-      setError('Failed to trigger test transfers. See console for details.');
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const response = await fetch('http://localhost:5000/api/test-transfers', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}) // nawet jeśli nie potrzebujesz danych, wyślij pusty obiekt
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server responded with status: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    console.log('Test transfers executed:', data);
+  } catch (err) {
+    console.error('Failed to execute test transfers:', err);
+    setError('Failed to trigger test transfers. See console for details.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="soc-dashboard-container">
