@@ -29,11 +29,11 @@ export default function TransfersTable() {
         </thead>
         <tbody>
           {transfers.map((t, i) => (
-            <tr key={i}>
+            <tr key={i} className={`log-level-${t.level || "INFO"}`}>
               <td>{t.datetime}</td>
-              <td>{t.from}</td>
-              <td>{t.to}</td>
-              <td>{t.amount}</td>
+              <td>{t.sender || t.from}</td>
+              <td>{t.recipient || t.to}</td>
+              <td>{t.amount_eur ?? t.amount}</td>
               <td>{t.ip}</td>
             </tr>
           ))}

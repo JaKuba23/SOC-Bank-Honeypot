@@ -46,12 +46,14 @@ export default function TransferForm({ onTransfer }) {
       <label>
         Recipient:
         <select value={recipient} onChange={e => setRecipient(e.target.value)} required>
-          <option value="">-- Select --</option>
-          {users.map(u => (
-            <option key={u.account} value={u.account}>
-              {u.fullname} ({u.account})
-            </option>
-          ))}
+          <option value="">-- Select recipient --</option>
+          {users
+            .filter(u => u.fullname !== "Admin User" && u.username !== "admin" && u.role !== "admin")
+            .map(u => (
+              <option key={u.account} value={u.account}>
+                {u.fullname} ({u.account})
+              </option>
+            ))}
         </select>
       </label>
       <label>

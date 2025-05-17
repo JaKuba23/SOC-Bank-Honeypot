@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function LiveLogsTable() {
   const [logs, setLogs] = useState([]);
@@ -27,8 +27,8 @@ export default function LiveLogsTable() {
           </tr>
         </thead>
         <tbody>
-          {logs.slice().reverse().map((log, i) => (
-            <tr key={i} className={log.level === "CRITICAL" ? "phishing" : log.level === "WARNING" ? "suspicious" : ""}>
+          {logs.map((log, i) => (
+            <tr key={i} className={`log-level-${log.level}`}>
               <td>{log.datetime}</td>
               <td>{log.level}</td>
               <td>{log.ip}</td>
