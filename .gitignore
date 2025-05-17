@@ -24,7 +24,7 @@ honeypot.log
 .DS_Store
 Thumbs.db
 
-# Node.js (jeśli używasz npm/yarn w frontendzie)
+# Node.js (frontend)
 node_modules/
 package-lock.json
 yarn.lock
