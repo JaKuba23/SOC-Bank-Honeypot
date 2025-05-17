@@ -20,14 +20,30 @@ A Python-based honeypot and security monitoring project that simulates a secure 
 
 ## Architecture
 
-```mermaid
-graph TD
-    A[User] -->|Web Browser| B[Frontend (HTML/JS)]
-    B -->|API Request| C[Flask Backend (api/transfer.py)]
-    C -->|Fetch| D[NBP Exchange Rate API]
-    C -->|Log| E[Honeypot Logger (honeypot.log)]
-    E -->|Analyze| F[SOC Dashboard (app/soc_dashboard.py)]
-    E -->|Export| G[SIEM/SOC Tools]
+```
++--------+        +---------------------+        +---------------------+
+|  User  |<-----> | Frontend (HTML/JS)  |<-----> | Flask Backend (API) |
++--------+        +---------------------+        +---------------------+
+                                                        |
+                                                        v
+                                            +--------------------------+
+                                            | NBP Exchange Rate API    |
+                                            +--------------------------+
+                                                        |
+                                                        v
+                                            +--------------------------+
+                                            | Honeypot Logger (log)    |
+                                            +--------------------------+
+                                                        |
+                                                        v
+                                            +--------------------------+
+                                            | SOC Dashboard            |
+                                            +--------------------------+
+                                                        |
+                                                        v
+                                            +--------------------------+
+                                            | SIEM/SOC Tools           |
+                                            +--------------------------+
 ```
 
 ---

@@ -11,7 +11,6 @@ def run_soc_dashboard():
     return subprocess.Popen([sys.executable, os.path.join("app", "soc_dashboard.py")])
 
 def run_frontend_server():
-    # HTTP server for frontend on port 8080
     frontend_dir = os.path.join("app", "frontend")
     return subprocess.Popen([sys.executable, "-m", "http.server", "8080"], cwd=frontend_dir)
 
@@ -31,7 +30,6 @@ if __name__ == "__main__":
 
     print("All services started. Press Ctrl+C to stop.")
     try:
-        # Wait for any process to exit, then terminate all
         while True:
             if backend_proc.poll() is not None or soc_proc.poll() is not None or frontend_proc.poll() is not None:
                 break
