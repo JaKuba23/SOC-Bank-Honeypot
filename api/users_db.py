@@ -6,13 +6,13 @@ USERS = [
         "username": "admin",
         "password": hashlib.sha256("admin".encode()).hexdigest(),
         "fullname": "Admin Admin",
-        "account": "PL61109010140000071219812874",
+        "account": "PL271020040000300201355389",
         "balance": 100000000000.00
     },
     {
-        "username": "William",
-        "password": hashlib.sha256("tajnehaslo".encode()).hexdigest(),
-        "fullname": "William Smith",
+        "username": "anna",
+        "password": hashlib.sha256("haslo123".encode()).hexdigest(),
+        "fullname": "Anna Smith",
         "account": "PL27114020040000300201355387",
         "balance": 8000.00
     },

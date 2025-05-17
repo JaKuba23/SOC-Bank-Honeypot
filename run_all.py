@@ -12,7 +12,7 @@ def run_soc_dashboard():
 
 def run_frontend_server():
     frontend_dir = os.path.join("app", "frontend")
-    return subprocess.Popen([sys.executable, "-m", "http.server", "8080"], cwd=frontend_dir)
+    return subprocess.Popen([sys.executable, "-m", "http.server", "8080"], cwd=frontend_dir, start_new_session=True)
 
 if __name__ == "__main__":
     print("Starting backend (api.transfer)...")
@@ -26,7 +26,6 @@ if __name__ == "__main__":
     time.sleep(2)
     print("Opening browser windows...")
     webbrowser.open_new("http://localhost:8080/login.html")
-    # Otwieraj dashboard frontendowy, nie backendowy!
     webbrowser.open_new("http://localhost:8080/soc_dashboard.html")
 
     print("All services started. Press Ctrl+C to stop.")

@@ -1,7 +1,8 @@
+# test_transfer.py
 import requests
 
-API_URL = "http://127.0.0.1:5000/api/transfer"
-LOGIN_URL = "http://127.0.0.1:5000/api/login"
+API_URL = "http://localhost:5000/api/transfer"
+LOGIN_URL = "http://localhost:5000/api/login"
 
 def login(username, password):
     s = requests.Session()
@@ -39,3 +40,11 @@ def test_xss():
     data = {"recipient_account": "PL27114020040000300201355387", "amount": "<script>alert(1)</script>"}
     r = s.post(API_URL, json=data)
     assert r.status_code == 400
+
+if __name__ == "__main__":
+    test_valid_transfer()
+    test_negative_amount()
+    test_same_sender_recipient()
+    test_sql_injection()
+    test_xss()
+    print("✅ Wszystkie testy zakończone pomyślnie")
