@@ -28,7 +28,6 @@ This educational project is ideal for individuals aspiring to become SOC Analyst
 
 ## 👁️ Architecture
 
-<<<<<<< HEAD
 <p align="center">
   <em>A simplified architecture diagram showing the data flow.</em>
 </p>
@@ -41,8 +40,6 @@ graph TD
     C --> E(Honeypot Logger);
     E --> F[honeypot.log File];
     G[SOC Dashboard in React] -.-> C;
-=======
->>>>>>> 9c4a295b1963e72af25e07b003effbba8d780f51
 ```
 *(The SOC Dashboard fetches data from the Backend API, which in turn uses the Honeypot Logger)*
 
@@ -194,7 +191,6 @@ This project demonstrates:
 ---
 
 **This project is designed for educational and demonstration purposes in the field of cybersecurity and SOC operations.**
-<<<<<<< HEAD
 ```
 
 **Key changes and considerations for this English version:**
@@ -416,5 +412,3 @@ This project demonstrates:
 8.  **Removed `pytest` section:** Unless you have specifically written PyTest tests for the backend and want to include them. If you do, you can add that section back.
 
 Make sure to replace `<YOUR_REPOSITORY_URL>` if you include the `git clone` command. This `README.md` should provide a comprehensive and professional overview of your project on GitHub.
-=======
->>>>>>> 9c4a295b1963e72af25e07b003effbba8d780f51
