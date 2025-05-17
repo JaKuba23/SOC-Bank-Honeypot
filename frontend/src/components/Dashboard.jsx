@@ -1,52 +1,56 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import TransferForm from "./TransferForm";
-import HistoryTable from "./HistoryTable";
-import Loading from "./Loading";
-import Error from "./Error";
+import { TransferForm, HistoryTable, Loading, Error } from "./index";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loggedOut, setLoggedOut] = useState(false);
   const [error, setError] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [loggedOut, setLoggedOut] = useState(false);
-
-  const fetchUserData = useCallback(() => {
-    setLoading(true);
-    fetch("http://localhost:5000/api/me", { credentials: "include" })
-      .then(res => res.json())
-      .then(data => {
-        if (data.logged_in) {
-          setUser(data);
-          setError("");
-        } else {
-          setUser(null);
-        }
-      })
-      .catch(() => {
-        setError("Failed to load user data.");
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
-  }, []);
 
   useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
+    const fetchUser = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/me", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          // Filtrowanie historii tylko do transakcji powiązanych z kontem użytkownika
+          const userAccount = data.account;
+          const filteredHistory = (data.history || []).filter(
+            h =>
+              h.sender_account === userAccount ||
+              h.recipient_account === userAccount ||
+              h.sender === data.fullname ||
+              h.recipient === data.fullname ||
+              h.sender_name === data.fullname ||
+              h.recipient_name === data.fullname
+          );
+          setHistory(filteredHistory);
+        } else {
+          setLoggedOut(true);
+        }
+      } catch (err) {
+        setError("Failed to load user data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, [refreshTrigger]);
 
-  function handleLogout() {
-    fetch("http://localhost:5000/api/logout", {
+  const handleLogout = async () => {
+    await fetch("http://localhost:5000/api/logout", {
       method: "POST",
       credentials: "include",
-    }).then(() => {
-      setUser(null);
-      setLoggedOut(true);
     });
-  }
+    setLoggedOut(true);
+  };
 
   const handleTransferSuccess = () => {
-    fetchUserData();
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -68,8 +72,11 @@ export default function Dashboard() {
         <section className="panel">
           <TransferForm onTransfer={handleTransferSuccess} selectedAccount={null} />
         </section>
-        <HistoryTable key={`history-${refreshTrigger}`} />
+        <HistoryTable history={history} />
       </main>
+      <footer>
+        <p>&copy; {new Date().getFullYear()} Secure Bank. For educational purposes only.</p>
+      </footer>
       {error && <Error message={error} />}
     </div>
   );

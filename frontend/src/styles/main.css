@@ -267,16 +267,16 @@ html[data-theme="dark"] tbody tr:hover {
 
 /* Log Levels & Transaction Types */
 tr.log-level-INFO, tr.log-level-INFO td {
-  background-color: #e8f5e9 !important;
-  color: #388e3c !important;
+  background-color: #eaf6f0 !important;
+  color: #2e7d32 !important;
 }
 tr.log-level-WARNING, tr.log-level-WARNING td {
-  background-color: #fff3cd !important;
-  color: #b71c1c !important;
+  background-color: #fff8e1 !important;
+  color: #b26a00 !important;
 }
 tr.log-level-CRITICAL, tr.log-level-CRITICAL td {
-  background-color: #f8d7da !important;
-  color: #7b1fa2 !important;
+  background-color: #fbe9e7 !important;
+  color: #b71c1c !important;
   font-weight: bold;
 }
 tr.incoming-tx { background-color: var(--tx-incoming-bg-row); }

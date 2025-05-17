@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { LiveLogsTable, SuspiciousTable, TransfersTable } from '../components';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 
@@ -18,39 +18,51 @@ export default function SocDashboard() {
     navigate("/login");
   };
 
-    const runTestTransfers = async () => {
+  const runTestTransfers = async () => {
     try {
-        setLoading(true);
-        // ...twój kod losowania eventu...
-        const response = await fetch('http://localhost:5000/api/test-transfers', {
+      setLoading(true);
+      const eventTypes = [
+        "valid_transfer",
+        "invalid_transfer",
+        "failed_login",
+        "phishing"
+      ];
+      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+      let body = {};
+      if (eventType === "valid_transfer") {
+        body = { test_type: "valid_transfer", sender: "William", recipient: "Emma", amount: 10 };
+      } else if (eventType === "invalid_transfer") {
+        body = { test_type: "invalid_transfer", sender: "William", recipient: "Nonexistent", amount: 999999 };
+      } else if (eventType === "failed_login") {
+        body = { test_type: "failed_login", username: "hacker", password: "wrongpass" };
+      } else if (eventType === "phishing") {
+        body = { test_type: "phishing", username: "admin", password: "wrongpass" };
+      }
+      const response = await fetch('http://localhost:5000/api/test-transfers', {
         method: 'POST',
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
-        });
-        
-        if (!response.ok) return;
-    
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) return;
     } catch (err) {
-     
+      // brak spamu błędów
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
-    // Start/stop loop
-    const handleToggle = () => {
-        if (running) {
-        clearInterval(intervalRef.current);
-        setRunning(false);
-        } else {
-        runTestTransfers(); // natychmiast po kliknięciu
-        intervalRef.current = setInterval(runTestTransfers, 1000);
-        setRunning(true);
-        }
-    };
+  const handleToggle = () => {
+    if (running) {
+      clearInterval(intervalRef.current);
+      setRunning(false);
+    } else {
+      runTestTransfers();
+      intervalRef.current = setInterval(runTestTransfers, 1000);
+      setRunning(true);
+    }
+  };
 
-  // Sprzątanie po odmontowaniu
   React.useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
@@ -71,7 +83,6 @@ export default function SocDashboard() {
             {running ? 'Stop Test Events' : 'Run Test Events'}
           </button>
           <button className="logout-button" onClick={handleLogout}>Logout</button>
-          <Link to="/dashboard" className="back-to-dashboard-link">User Dashboard</Link>
         </div>
       </header>
       <main>
