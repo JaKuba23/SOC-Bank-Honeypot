@@ -95,7 +95,7 @@ Currency-Phish-Honeypot/
 ### 1. Backend Setup
 
 ```bash
-cd Currency-Phish-Honeypot/backend
+cd SOC-Bank-Honeypot/backend
 python -m venv venv
 # On Windows:
 venv\Scripts\activate
@@ -107,10 +107,10 @@ python api/transfer.py
 # The backend will be running on http://localhost:5000
 ```
 
-### 2. Frontend Setup
+### 2. Frontend Setup (in another terminal)
 
 ```bash
-cd ../frontend
+cd SOC-Bank-Honeypot/frontend
 npm install
 npm start
 # The application will open at http://localhost:3000
