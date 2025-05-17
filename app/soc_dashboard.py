@@ -1,8 +1,8 @@
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 import re
 import os
 
-app = Flask(__name__, template_folder='frontend')
+app = Flask(__name__, template_folder='../frontend')
 
 LOG_FILE = os.path.join(os.path.dirname(__file__), '..', 'honeypot.log')
 
@@ -45,7 +45,7 @@ def get_logs():
 
 @app.route('/dashboard')
 def dashboard():
-    return send_from_directory('frontend', 'soc_dashboard.html')
+    return send_from_directory('../frontend', 'soc_dashboard.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

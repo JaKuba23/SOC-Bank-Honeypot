@@ -24,6 +24,7 @@
                 <option value="INFO">INFO</option>
             </select>
             <button onclick="loadLogs()">Filter</button>
+            <button onclick="runTestTransfers()">Run Test Transfers</button>
         </div>
         <table id="logTable">
             <thead>
@@ -36,13 +37,14 @@
             </thead>
             <tbody></tbody>
         </table>
+        <div id="testResults"></div>
     </div>
     <script>
         async function loadLogs() {
             const ip = document.getElementById('filterIp').value;
             const keyword = document.getElementById('filterKeyword').value;
             const level = document.getElementById('filterLevel').value;
-            let url = `/api/logs?`;
+            let url = `http://127.0.0.1:5000/api/logs?`;
             if(ip) url += `ip=${ip}&`;
             if(keyword) url += `keyword=${keyword}&`;
             if(level) url += `level=${level}&`;
@@ -60,6 +62,12 @@
                                 <td>${log.msg}</td>`;
                 tbody.appendChild(tr);
             });
+        }
+        async function runTestTransfers() {
+            const res = await fetch('http://127.0.0.1:5000/api/test-transfers', {method: 'POST'});
+            const data = await res.json();
+            document.getElementById('testResults').textContent = "Test transfers: " + JSON.stringify(data.results, null, 2);
+            loadLogs();
         }
         loadLogs();
     </script>

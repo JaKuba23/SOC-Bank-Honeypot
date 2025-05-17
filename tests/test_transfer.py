@@ -1,29 +1,41 @@
 import requests
 
 API_URL = "http://127.0.0.1:5000/api/transfer"
+LOGIN_URL = "http://127.0.0.1:5000/api/login"
+
+def login(username, password):
+    s = requests.Session()
+    res = s.post(LOGIN_URL, json={"username": username, "password": password})
+    assert res.status_code == 200
+    return s
 
 def test_valid_transfer():
-    data = {"sender": "Anna Nowak", "recipient": "Tomasz Kamiński", "amount": 100}
-    r = requests.post(API_URL, json=data)
+    s = login("anna", "haslo123")
+    data = {"recipient_account": "PL27114020040000300201355387", "amount": 100}
+    r = s.post(API_URL, json=data)
     assert r.status_code == 200
     assert "pln" in r.json()
 
 def test_negative_amount():
-    data = {"sender": "Anna Nowak", "recipient": "Tomasz Kamiński", "amount": -100}
-    r = requests.post(API_URL, json=data)
+    s = login("anna", "haslo123")
+    data = {"recipient_account": "PL27114020040000300201355387", "amount": -100}
+    r = s.post(API_URL, json=data)
     assert r.status_code == 400
 
 def test_same_sender_recipient():
-    data = {"sender": "Anna Nowak", "recipient": "Anna Nowak", "amount": 100}
-    r = requests.post(API_URL, json=data)
+    s = login("anna", "haslo123")
+    data = {"recipient_account": "PL61109010140000071219812874", "amount": 100}
+    r = s.post(API_URL, json=data)
     assert r.status_code == 400
 
 def test_sql_injection():
-    data = {"sender": "Anna Nowak", "recipient": "Tomasz Kamiński", "amount": "1; DROP TABLE users"}
-    r = requests.post(API_URL, json=data)
+    s = login("anna", "haslo123")
+    data = {"recipient_account": "PL27114020040000300201355387", "amount": "1; DROP TABLE users"}
+    r = s.post(API_URL, json=data)
     assert r.status_code == 400
 
 def test_xss():
-    data = {"sender": "Anna Nowak", "recipient": "Tomasz Kamiński", "amount": "<script>alert(1)</script>"}
-    r = requests.post(API_URL, json=data)
+    s = login("anna", "haslo123")
+    data = {"recipient_account": "PL27114020040000300201355387", "amount": "<script>alert(1)</script>"}
+    r = s.post(API_URL, json=data)
     assert r.status_code == 400

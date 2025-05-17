@@ -2,42 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Bank Transfer</title>
+    <title>Secure Bank - Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <div class="bank-header">
-            <i class="fas fa-university fa-2x"></i>
             <h1>Secure Bank</h1>
-            <span class="soc-badge"><i class="fas fa-shield-alt"></i> SOC Monitored</span>
+            <span class="soc-badge">SOC Monitored</span>
+            <button id="logoutBtn" style="float:right;">Logout</button>
         </div>
-        <form id="transferForm">
-            <div class="user-row">
-                <div>
-                    <label>Sender:</label>
-                    <span id="senderName"></span>
-                </div>
-                <div>
-                    <label>Recipient:</label>
-                    <span id="recipientName"></span>
-                </div>
-            </div>
+        <div id="userInfo"></div>
+        <form id="transferForm" style="margin-top:20px;">
+            <label for="recipient">Recipient:</label>
+            <select id="recipient"></select>
             <label for="amount">Amount in EUR:</label>
-            <input type="text" id="amount" name="amount" placeholder="e.g. 100.00" required />
-            <input type="submit" value="Transfer" />
+            <input type="number" id="amount" min="1" step="0.01" required>
+            <input type="submit" value="Transfer">
         </form>
-        <div id="resultSection" class="result-section" style="display: none;">
-            <h2>Transfer Result: <span id="conversionResult"></span> PLN</h2>
-            <small id="rateInfo" style="display: none; margin-top: 5px; color: #555;"></small>
-        </div>
-        <div id="errorSection" class="error-section" style="display: none;">
-            <p id="errorMessage"></p>
-        </div>
+        <div id="resultSection" style="display:none;"></div>
+        <div id="errorSection" style="display:none; color:red;"></div>
+        <button id="socDashboardBtn" style="margin-top:20px;">Open SOC Dashboard</button>
     </div>
-    <script src="main.js" defer></script>
+    <script src="main.js"></script>
 </body>
 </html>
