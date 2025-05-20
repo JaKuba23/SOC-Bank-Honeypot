@@ -8,8 +8,8 @@ class PhishingDetector:
         self.suspicious_ips = set() # Using set for faster lookup
 
         # Configuration
-        self.TIME_WINDOW_SECONDS = 300  # 5 minut
-        self.MAX_ATTEMPTS_IN_WINDOW = 3 # Maksymalna liczba prób zanim IP zostanie uznane za podejrzane
+        self.TIME_WINDOW_SECONDS = 300  # 5 min
+        self.MAX_ATTEMPTS_IN_WINDOW = 3 # max ip etc
 
     def failed_login_attempt(self, ip_address): # Changed method name
         """Records a failed login attempt for a given IP."""

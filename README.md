@@ -90,6 +90,17 @@ venv\Scripts\activate
 source venv/bin/activate
 
 pip install -r requirements.txt
+```
+
+Create a `.env` file in the `backend/` directory (do not commit this file!) and add:
+
+```
+API_TOKEN=your_secret_token_here
+```
+
+Start the backend server:
+
+```bash
 python -m api.transfer
 # The backend will be running on http://localhost:5000
 ```
@@ -170,6 +181,12 @@ npm start
 
 ---
 
-**This project is for educational and demonstration purposes in cybersecurity and SOC operations.**
+## ⚠️ Important
+
+- **Never commit your `.env` file or any secrets to the repository.**
+- Make sure `.env` is listed in `.gitignore`.
+- The API token in `.env` must match the token used in frontend/backend requests (header: `X-API-KEY`).
 
 ---
+
+**This project is for educational and demonstration purposes in cybersecurity and SOC operations.**

@@ -1,6 +1,6 @@
 # Python
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
 
@@ -24,10 +24,15 @@ honeypot.log
 .DS_Store
 Thumbs.db
 
+#api
+.env
+
 # Node.js (frontend)
 node_modules/
 package-lock.json
 yarn.lock
+build/
+dist/
 
 # Misc
 *.bak
